@@ -151,7 +151,7 @@ exports.updateProductService = async (id, currProduct) => {
     product.status = currProduct.status;
     product.productType = currProduct.productType;
     product.description = currProduct.description;
-    product.additionalInformation = currProduct.additionalInformation;
+    // product.additionalInformation = currProduct.additionalInformation;
     product.offerDate.startDate = currProduct.offerDate.startDate;
     product.offerDate.endDate = currProduct.offerDate.endDate;
 

@@ -3,10 +3,20 @@ const Category = require('../model/Category');
 const Products = require('../model/Products');
 
 // create category service
+// exports.createCategoryService = async (data) => {
+//   const category = await Category.create(data);
+//   return category;
+// }
 exports.createCategoryService = async (data) => {
-  const category = await Category.create(data);
-  return category;
-}
+  try {
+    return await Category.create(data);
+  } catch (error) {
+    if (error.code === 11000) {  // MongoDB duplicate key error
+      throw new Error("Category name must be unique");
+    }
+    throw error;
+  }
+};
 
 // create all category service
 exports.addAllCategoryService = async (data) => {
@@ -17,7 +27,7 @@ exports.addAllCategoryService = async (data) => {
 
 // get all show category service
 exports.getShowCategoryServices = async () => {
-  const category = await Category.find({status:'Show'}).populate('products');
+  const category = await Category.find({ status: 'Show' }).populate('products');
   return category;
 }
 
@@ -29,7 +39,7 @@ exports.getAllCategoryServices = async () => {
 
 // get type of category service
 exports.getCategoryTypeService = async (param) => {
-  const categories = await Category.find({productType:param}).populate('products');
+  const categories = await Category.find({ productType: param }).populate('products');
   return categories;
 }
 
@@ -40,14 +50,14 @@ exports.deleteCategoryService = async (id) => {
 }
 
 // update category
-exports.updateCategoryService = async (id,payload) => {
-  const isExist = await Category.findOne({ _id:id })
+exports.updateCategoryService = async (id, payload) => {
+  const isExist = await Category.findOne({ _id: id })
 
   if (!isExist) {
     throw new ApiError(404, 'Category not found !')
   }
 
-  const result = await Category.findOneAndUpdate({ _id:id }, payload, {
+  const result = await Category.findOneAndUpdate({ _id: id }, payload, {
     new: true,
   })
   return result

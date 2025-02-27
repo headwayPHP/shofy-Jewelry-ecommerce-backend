@@ -1,5 +1,7 @@
 const express = require("express");
 const router = express.Router();
+const { body } = require("express-validator")
+
 const {
   registerAdmin,
   loginAdmin,
@@ -17,8 +19,16 @@ const {
 //register a staff
 router.post("/register", registerAdmin);
 
+router.post('/login', [
+  body('email').isEmail().withMessage('Invalid Email'),
+  // body('firstname').isLength({ min: 1 }).withMessage('First name must be at least 3 characters long'),
+  body('password').isLength({ min: 1 }).withMessage('Password must be at least 6 characters long'),
+  // body('mobile').isLength({ min: 10 }).withMessage('Mobile Number must be at least 10 Digits long')
+],
+  loginAdmin
+)
 //login a admin
-router.post("/login", loginAdmin);
+// router.post("/login", loginAdmin);
 
 //login a admin
 router.patch("/change-password", changePassword);
@@ -46,5 +56,7 @@ router.patch("/update-stuff/:id", updateStaff);
 
 //delete a staff
 router.delete("/:id", deleteStaff);
+
+// routeer.get("/admin", getAdmin);
 
 module.exports = router;

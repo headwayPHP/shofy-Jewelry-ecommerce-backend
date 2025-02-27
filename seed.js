@@ -40,16 +40,16 @@ const importData = async () => {
 
     await Coupon.deleteMany();
     await Coupon.insertMany(couponData);
-    
+
     await Order.deleteMany();
     await Order.insertMany(orderData);
-    
+
     await User.deleteMany();
     await User.insertMany(userData);
-    
+
     await Reviews.deleteMany();
     await Reviews.insertMany(reviewsData);
-    
+
     await Admin.deleteMany();
     await Admin.insertMany(adminData);
 

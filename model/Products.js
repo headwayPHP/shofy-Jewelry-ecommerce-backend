@@ -8,7 +8,7 @@ const productsSchema = mongoose.Schema({
     type: String,
     required: false,
   },
-  img:{
+  img: {
     type: String,
     required: true,
     validate: [validator.isURL, "Please provide valid url(s)"]
@@ -30,34 +30,34 @@ const productsSchema = mongoose.Schema({
     required: true,
   },
   imageURLs: [{
-    color:{
-      name:{
+    color: {
+      name: {
         type: String,
         required: false,
         trim: true,
       },
-      clrCode:{
+      clrCode: {
         type: String,
         required: false,
         trim: true,
       }
     },
-    img:{
+    img: {
       type: String,
       required: false,
       validate: [validator.isURL, "Please provide valid url(s)"]
     },
-    sizes:[String]
+    sizes: [String]
   }],
-  parent:{
-    type:String,
-    required:true,
-    trim:true,
-   },
-  children:{
-    type:String,
-    required:true,
-    trim:true,
+  parent: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  children: {
+    type: String,
+    required: true,
+    trim: true,
   },
   price: {
     type: Number,
@@ -95,18 +95,18 @@ const productsSchema = mongoose.Schema({
       required: true,
     }
   },
-  status: {
+  // status: {
+  //   type: String,
+  //   required: true,
+  //   enum: {
+  //     values: ["in-stock", "out-of-stock", "discontinued"],
+  //     message: "status can't be {VALUE} "
+  //   },
+  //   default: "in-stock",
+  // },
+  reviews: [{ type: ObjectId, ref: 'Reviews' }],
+  productType: {
     type: String,
-    required: true,
-    enum: {
-      values: ["in-stock", "out-of-stock", "discontinued"],
-      message: "status can't be {VALUE} "
-    },
-    default: "in-stock",
-  },
-  reviews: [{type:ObjectId, ref: 'Reviews' }],
-  productType:{
-    type:String,
     required: true,
     lowercase: true,
   },
@@ -118,15 +118,15 @@ const productsSchema = mongoose.Schema({
     type: String,
     required: false
   },
-  additionalInformation: [{}],
+  // additionalInformation: [{}],
   tags: [String],
   sizes: [String],
-  offerDate:{
-    startDate:{
-      type:Date
+  offerDate: {
+    startDate: {
+      type: Date
     },
-    endDate:{
-      type:Date
+    endDate: {
+      type: Date
     },
   },
   featured: {
@@ -141,6 +141,31 @@ const productsSchema = mongoose.Schema({
 }, {
   timestamps: true,
 })
+
+// const productsSchem = mongoose.Schema({
+//   about_this_item: {
+//     type: string,
+//     required: true
+//   },
+//   additional_info: {
+//     type: string,
+//     required: true
+//   },
+//   product_name: {
+//     type: string,
+//     required: true
+//   },
+//   category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
+//   metal_type: { type: mongoose.Schema.Types.ObjectId, ref: 'MetalType', required: true },
+//   gender: {
+//     type: string,
+//     required: true
+//   },
+//   purity: {
+//     type: float,
+//     required: true
+//   }
+// })
 
 
 const Products = mongoose.model('Products', productsSchema)

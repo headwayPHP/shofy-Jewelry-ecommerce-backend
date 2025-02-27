@@ -1,0 +1,5 @@
+notes;
+
+Admin panel:
+images in categories and products
+    

@@ -25,21 +25,21 @@ const globalErrorHandler = (error, req, res, next) => {
     message = error.message
     errorMessages = error?.message
       ? [
-          {
-            path: '',
-            message: error?.message,
-          },
-        ]
+        {
+          path: '',
+          message: error?.message,
+        },
+      ]
       : []
   } else if (error instanceof Error) {
     message = error?.message
     errorMessages = error?.message
       ? [
-          {
-            path: '',
-            message: error?.message,
-          },
-        ]
+        {
+          path: '',
+          message: error?.message,
+        },
+      ]
       : []
   }
 
@@ -47,7 +47,7 @@ const globalErrorHandler = (error, req, res, next) => {
     success: false,
     message,
     errorMessages,
-    stack:secret.env !== 'production' ? error?.stack : undefined,
+    stack: secret.env !== 'production' ? error?.stack : undefined,
   })
 }
 

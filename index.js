@@ -12,6 +12,10 @@ const globalErrorHandler = require("./middleware/global-error-handler");
 // routes
 const userRoutes = require("./routes/user.routes");
 const categoryRoutes = require("./routes/category.routes");
+const promotypeRoutes = require("./routes/promotype.routes");
+const colorRoutes = require("./routes/color.routes");
+const purityRoutes = require("./routes/purity.routes");
+const metalTypeRoutes = require("./routes/metaltype.routes");
 const brandRoutes = require("./routes/brand.routes");
 const userOrderRoutes = require("./routes/user.order.routes");
 const productRoutes = require("./routes/product.routes");
@@ -19,7 +23,7 @@ const orderRoutes = require("./routes/order.routes");
 const couponRoutes = require("./routes/coupon.routes");
 const reviewRoutes = require("./routes/review.routes");
 const adminRoutes = require("./routes/admin.routes");
-// const uploadRouter = require('./routes/uploadFile.route');
+const uploadRouter = require('./routes/uploadFile.routes');
 const cloudinaryRoutes = require("./routes/cloudinary.routes");
 
 // middleware
@@ -28,21 +32,30 @@ app.use(express.json());
 app.use(morgan('dev'));
 app.use(express.static(path.join(__dirname, 'public')));
 
+async function syncIndexes() {
+  await Category.syncIndexes();
+  console.log("Indexes synced successfully");
+}
+
 // connect database
 connectDB();
 
-app.use("/api/user", userRoutes);
-app.use("/api/category", categoryRoutes);
-app.use("/api/brand", brandRoutes);
-app.use("/api/product", productRoutes);
-// app.use('/api/upload',uploadRouter);
-app.use("/api/order", orderRoutes);
-app.use("/api/coupon", couponRoutes);
-app.use("/api/user-order", userOrderRoutes);
-app.use("/api/review", reviewRoutes);
-app.use("/api/cloudinary", cloudinaryRoutes);
+app.use("/api/admin/user", userRoutes);
+app.use("/api/admin/category", categoryRoutes);
+app.use("/api/admin/promotype", promotypeRoutes);
+app.use("/api/admin/color", colorRoutes);
+app.use("/api/admin/purity", purityRoutes);
+app.use("/api/admin/metaltype", metalTypeRoutes);
+app.use("/api/admin/brand", brandRoutes);
+app.use("/api/admin/product", productRoutes);
+app.use('/api/admin/upload', uploadRouter);
+app.use("/api/admin/order", orderRoutes);
+app.use("/api/admin/coupon", couponRoutes);
+app.use("/api/admin/user-order", userOrderRoutes);
+app.use("/api/admin/review", reviewRoutes);
+app.use("/api/admin/cloudinary", cloudinaryRoutes);
 app.use("/api/admin", adminRoutes);
-
+// https://data-asg.goldprice.org/dbXRates/INR
 // root route
 app.get("/", (req, res) => res.send("Apps worked successfully"));
 
