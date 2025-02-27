@@ -1,10 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const { addReview, deleteReviews} = require("../controller/review.controller");
+const { addReview, deleteReview, getReviewsByProduct } = require("../controller/review.controller.js");
 
-// add a review
+// Add a review
 router.post("/add", addReview);
-// delete reviews
-router.delete("/delete/:id", deleteReviews);
+
+// Get all reviews for a specific product
+router.get("/product/:productId", getReviewsByProduct);
+
+// Delete a review (change from DELETE to POST to pass parameters in the request body)
+router.post("/delete", deleteReview);
 
 module.exports = router;

@@ -1,191 +1,131 @@
-const Brand = require("../model/Brand");
-const Category = require("../model/Category");
-const Product = require("../model/Products");
+const Product = require("../model/Products.js");
+const Category = require("../model/Category.js");
+const MetalType = require("../model/MetalType.js");
+const Purity = require("../model/Purity.js");
+const Review = require("../model/Review.js");
 
-// create product service
-exports.createProductService = async (data) => {
-  const product = await Product.create(data);
-  const { _id: productId, brand, category } = product;
-  //update Brand
-  await Brand.updateOne(
-    { _id: brand.id },
-    { $push: { products: productId } }
-  );
-  //Category Brand
-  await Category.updateOne(
-    { _id: category.id },
-    { $push: { products: productId } }
-  );
-  return product;
-};
+// Create product service
+exports.createProductService = async (productData) => {
+  try {
+    // Parse JSON fields (if sent as a string)
+    if (typeof productData.product_images === "string") {
+      productData.product_images = JSON.parse(productData.product_images);
+    }
+    if (typeof productData.reviews === "string") {
+      productData.reviews = JSON.parse(productData.reviews);
+    }
 
-// create all product service
-exports.addAllProductService = async (data) => {
-  await Product.deleteMany();
-  const products = await Product.insertMany(data);
-  for (const product of products) {
-    await Brand.findByIdAndUpdate(product.brand.id, {
-      $push: { products: product._id },
-    });
-    await Category.findByIdAndUpdate(product.category.id, {
-      $push: { products: product._id },
-    });
+    // Validate required fields
+    const requiredFields = [
+      "about_this_item",
+      "additional_info",
+      "product_name",
+      "category",
+      "metal_type",
+      "gender",
+      "size",
+      "weight",
+      "jewellery_type",
+      "making_charges_per_gm",
+      "purity",
+      "perGramPriceAsPerCarat",
+      "product_images",
+    ];
+
+    for (const field of requiredFields) {
+      if (!productData[field]) {
+        throw new Error(`Missing required field: ${field}`);
+      }
+    }
+
+    const product = new Product(productData);
+    await product.save();
+
+    return product; // Return the saved product
+  } catch (error) {
+    throw error; // Throw the error to be handled by the caller
   }
-  return products;
-};
+};;
 
-// get product data
+
+// Get all products
 exports.getAllProductsService = async () => {
   const products = await Product.find({}).populate("reviews");
-  return products;
+
+  // Base URL for images (replace with your actual domain)
+  const baseUrl = process.env.ADMIN_URL;
+
+  return products.map((product) => ({
+    ...product.toObject(),
+    product_images: product.product_images.map((image) => {
+      // If the image path is already a full URL, return it as is
+      if (image.startsWith("http")) {
+        return image;
+      }
+      // Otherwise, prepend the base URL
+      return `${baseUrl}${image}`;
+    }),
+    price: product.getSellingProductPrice(),
+    averageRating: product.averageRating,
+  }));
 };
 
-// get type of product service
-exports.getProductTypeService = async (req) => {
-  const type = req.params.type;
-  const query = req.query;
-  let products;
-  if (query.new === "true") {
-    products = await Product.find({ productType: type })
-      .sort({ createdAt: -1 })
-      .limit(8)
-      .populate("reviews");
-  } else if (query.featured === "true") {
-    products = await Product.find({
-      productType: type,
-      featured: true,
-    }).populate("reviews");
-  } else if (query.topSellers === "true") {
-    products = await Product.find({ productType: type })
-      .sort({ sellCount: -1 })
-      .limit(8)
-      .populate("reviews");
-  } else {
-    products = await Product.find({ productType: type }).populate("reviews");
-  }
-  return products;
-};
-
-// get offer product service
-exports.getOfferTimerProductService = async (query) => {
-  const products = await Product.find({
-    productType: query,
-    "offerDate.endDate": { $gt: new Date() },
-  }).populate("reviews");
-  return products;
-};
-
-// get popular product service by type
-exports.getPopularProductServiceByType = async (type) => {
-  const products = await Product.find({ productType: type })
-    .sort({ "reviews.length": -1 })
-    .limit(8)
-    .populate("reviews");
-  return products;
-};
-
-exports.getTopRatedProductService = async () => {
-  const products = await Product.find({
-    reviews: { $exists: true, $ne: [] },
-  }).populate("reviews");
-
-  const topRatedProducts = products.map((product) => {
-    const totalRating = product.reviews.reduce(
-      (sum, review) => sum + review.rating,
-      0
-    );
-    const averageRating = totalRating / product.reviews.length;
-
-    return {
-      ...product.toObject(),
-      rating: averageRating,
-    };
-  });
-
-  topRatedProducts.sort((a, b) => b.rating - a.rating);
-
-  return topRatedProducts;
-};
-
-// get product data
+// Get product by ID
 exports.getProductService = async (id) => {
   const product = await Product.findById(id).populate({
     path: "reviews",
-    populate: { path: "userId", select: "name email imageURL" },
+    populate: { path: "userId", select: "name email imageURL" }
   });
-  return product;
+  return {
+    ...product.toObject(),
+    price: product.getSellingProductPrice(),
+    averageRating: product.averageRating
+  };
 };
 
-// get product data
-exports.getRelatedProductService = async (productId) => {
-  const currentProduct = await Product.findById(productId);
-
-  const relatedProducts = await Product.find({
-    "category.name": currentProduct.category.name,
-    _id: { $ne: productId }, // Exclude the current product ID
-  });
-  return relatedProducts;
+// Get products by category
+exports.getProductsByCategoryService = async (categoryId) => {
+  const products = await Product.find({ category: categoryId }).populate("reviews");
+  return products.map(product => ({
+    ...product.toObject(),
+    price: product.getSellingProductPrice(),
+    averageRating: product.averageRating
+  }));
 };
 
-// update a product
-exports.updateProductService = async (id, currProduct) => {
-  // console.log('currProduct',currProduct)
-  const product = await Product.findById(id);
-  if (product) {
-    product.title = currProduct.title;
-    product.brand.name = currProduct.brand.name;
-    product.brand.id = currProduct.brand.id;
-    product.category.name = currProduct.category.name;
-    product.category.id = currProduct.category.id;
-    product.sku = currProduct.sku;
-    product.img = currProduct.img;
-    product.slug = currProduct.slug;
-    product.unit = currProduct.unit;
-    product.imageURLs = currProduct.imageURLs;
-    product.tags = currProduct.tags;
-    product.parent = currProduct.parent;
-    product.children = currProduct.children;
-    product.price = currProduct.price;
-    product.discount = currProduct.discount;
-    product.quantity = currProduct.quantity;
-    product.status = currProduct.status;
-    product.productType = currProduct.productType;
-    product.description = currProduct.description;
-    // product.additionalInformation = currProduct.additionalInformation;
-    product.offerDate.startDate = currProduct.offerDate.startDate;
-    product.offerDate.endDate = currProduct.offerDate.endDate;
-
-    await product.save();
-  }
-
-  return product;
+// Get top-rated products
+exports.getTopRatedProductService = async () => {
+  const products = await Product.find({ averageRating: { $gt: 0 } }).sort({ averageRating: -1 }).populate("reviews");
+  return products.map(product => ({
+    ...product.toObject(),
+    price: product.getSellingProductPrice(),
+    averageRating: product.averageRating
+  }));
 };
 
-
-
-// get Reviews Products
-exports.getReviewsProducts = async () => {
-  const result = await Product.find({
-    reviews: { $exists: true, $ne: [] },
-  })
-    .populate({
-      path: "reviews",
-      populate: { path: "userId", select: "name email imageURL" },
-    });
-
-  const products = result.filter(p => p.reviews.length > 0)
-
-  return products;
-};
-
-// get Reviews Products
+// Get out-of-stock products
 exports.getStockOutProducts = async () => {
-  const result = await Product.find({ status: "out-of-stock" }).sort({ createdAt: -1 })
-  return result;
+  const products = await Product.find({ status: "Hide" }).sort({ createdAt: -1 });
+  return products.map(product => ({
+    ...product.toObject(),
+    price: product.getSellingProductPrice()
+  }));
 };
 
-// get Reviews Products
+// Update product
+exports.updateProductService = async (id, updatedData) => {
+  const product = await Product.findByIdAndUpdate(id, updatedData, { new: true });
+  if (product) {
+    await product.updateAverageRating(); // Recalculate rating if necessary
+  }
+  return {
+    ...product.toObject(),
+    price: product.getSellingProductPrice(),
+    averageRating: product.averageRating
+  };
+};
+
+// Delete product
 exports.deleteProduct = async (id) => {
-  const result = await Product.findByIdAndDelete(id)
-  return result;
+  return await Product.findByIdAndDelete(id);
 };

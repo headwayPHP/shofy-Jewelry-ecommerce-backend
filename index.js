@@ -22,6 +22,7 @@ const productRoutes = require("./routes/product.routes");
 const orderRoutes = require("./routes/order.routes");
 const couponRoutes = require("./routes/coupon.routes");
 const reviewRoutes = require("./routes/review.routes");
+const rateRoutes = require("./routes/rate.routes");
 const adminRoutes = require("./routes/admin.routes");
 const uploadRouter = require('./routes/uploadFile.routes');
 const cloudinaryRoutes = require("./routes/cloudinary.routes");
@@ -53,6 +54,7 @@ app.use("/api/admin/order", orderRoutes);
 app.use("/api/admin/coupon", couponRoutes);
 app.use("/api/admin/user-order", userOrderRoutes);
 app.use("/api/admin/review", reviewRoutes);
+app.use("/api/admin/rate", rateRoutes);
 app.use("/api/admin/cloudinary", cloudinaryRoutes);
 app.use("/api/admin", adminRoutes);
 // https://data-asg.goldprice.org/dbXRates/INR
