@@ -42,6 +42,6 @@ router.get("/stock-out", productController.stockOutProducts);
 router.post("/add", upload.array("product_images", 5), productController.addProduct);
 router.post("/add-all", productController.addAllProducts);
 router.patch("/edit-product", protect, adminOnly, upload.array("product_images", 5), productController.updateProduct);
-router.delete("/delete", protect, adminOnly, productController.deleteProduct); // Use route parameter instead of body
+router.post("/delete", productController.deleteProduct); // Use route parameter instead of body
 
 module.exports = router;

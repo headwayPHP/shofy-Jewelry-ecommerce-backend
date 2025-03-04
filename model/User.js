@@ -60,7 +60,7 @@ const userSchema = mongoose.Schema(
     },
     status: {
       type: String,
-      default: "inactive",
+      default: "active",
       enum: ["active", "inactive", "blocked"],
     },
     reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "Reviews" }],

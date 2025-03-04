@@ -1,27 +1,39 @@
 const Brand = require("../model/Brand");
 const productServices = require("../services/product.service");
 const Product = require("../model/Products");
-// const { protect, adminOnly } = require("../middleware/authMiddleware.js");
+const multer = require("multer");
 
+// Multer setup for handling file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+const upload = multer({ storage: storage });
 
 // add product
 exports.addProduct = async (req, res, next) => {
   console.log('product--->', req.body);
   try {
-    const firstItem = {
-      color: {
-        name: '',
-        clrCode: ''
-      },
-      img: req.body.img,
-    };
-    const imageURLs = [firstItem, ...req.body.imageURLs];
+    if (!req.body.rate) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation Error",
+        errorMessages: [{ path: "rate", message: "Path `rate` is required." }]
+      });
+    }
+
+    const product_images = req.files ? req.files.map(file => file.path) : [];
+
     const result = await productServices.createProductService({
       ...req.body,
-      imageURLs: imageURLs,
+      product_images,
     });
 
-    console.log('product-result', result)
+    console.log('product-result', result);
 
     res.status(200).json({
       success: true,
@@ -31,7 +43,7 @@ exports.addProduct = async (req, res, next) => {
     });
   } catch (error) {
     console.log(error);
-    next(error)
+    next(error);
   }
 };
 
@@ -41,11 +53,11 @@ module.exports.addAllProducts = async (req, res, next) => {
     res.json({
       message: 'Products added successfully',
       result,
-    })
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 // get all products
 exports.getAllProducts = async (req, res, next) => {
@@ -54,15 +66,11 @@ exports.getAllProducts = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: result,
-    })
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
-
-
-
-
+};
 
 // get all products by type
 module.exports.getProductsByType = async (req, res, next) => {
@@ -71,12 +79,12 @@ module.exports.getProductsByType = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: result,
-    })
+    });
   } catch (error) {
-    console.log(error)
-    next(error)
+    console.log(error);
+    next(error);
   }
-}
+};
 
 // get offer product controller
 module.exports.getOfferTimerProducts = async (req, res, next) => {
@@ -85,11 +93,11 @@ module.exports.getOfferTimerProducts = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: result,
-    })
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 // get Popular Product By Type
 module.exports.getPopularProductByType = async (req, res, next) => {
@@ -98,11 +106,11 @@ module.exports.getPopularProductByType = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: result,
-    })
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 // get top rated Products
 module.exports.getTopRatedProducts = async (req, res, next) => {
@@ -111,55 +119,55 @@ module.exports.getTopRatedProducts = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: result,
-    })
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 // getSingleProduct
 exports.getSingleProduct = async (req, res, next) => {
   try {
-    const product = await productServices.getProductService(req.params.id)
-    res.json(product)
+    const product = await productServices.getProductService(req.params.id);
+    res.json(product);
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 // get Related Product
 exports.getRelatedProducts = async (req, res, next) => {
   try {
-    const products = await productServices.getRelatedProductService(req.params.id)
+    const products = await productServices.getRelatedProductService(req.params.id);
     res.status(200).json({
       success: true,
       data: products,
-    })
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 // update product
 exports.updateProduct = async (req, res, next) => {
   try {
-    const product = await productServices.updateProductService(req.params.id, req.body)
+    const product = await productServices.updateProductService(req.params.id, req.body);
     res.send({ data: product, message: "Product updated successfully!" });
   } catch (error) {
-    next(error)
+    next(error);
   }
 };
 
 // update product
 exports.reviewProducts = async (req, res, next) => {
   try {
-    const products = await productServices.getReviewsProducts()
+    const products = await productServices.getReviewsProducts();
     res.status(200).json({
       success: true,
       data: products,
-    })
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
 };
 
@@ -170,21 +178,20 @@ exports.stockOutProducts = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: products,
-    })
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
 };
 
 // update product
 exports.deleteProduct = async (req, res, next) => {
   try {
-    await productServices.deleteProduct(req.params.id);
+    await productServices.deleteProduct(req.body.id);
     res.status(200).json({
-      message: 'Product delete successfully'
-    })
+      message: 'Product delete successfully',
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
 };
-

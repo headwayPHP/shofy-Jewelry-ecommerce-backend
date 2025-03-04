@@ -24,6 +24,7 @@ const couponRoutes = require("./routes/coupon.routes");
 const reviewRoutes = require("./routes/review.routes");
 const rateRoutes = require("./routes/rate.routes");
 const adminRoutes = require("./routes/admin.routes");
+// const loginRoutes = require("./routes/login.routes");
 const uploadRouter = require('./routes/uploadFile.routes');
 const cloudinaryRoutes = require("./routes/cloudinary.routes");
 
@@ -41,7 +42,7 @@ async function syncIndexes() {
 // connect database
 connectDB();
 
-app.use("/api/admin/user", userRoutes);
+app.use("/api/user", userRoutes);
 app.use("/api/admin/category", categoryRoutes);
 app.use("/api/admin/promotype", promotypeRoutes);
 app.use("/api/admin/color", colorRoutes);
@@ -57,6 +58,7 @@ app.use("/api/admin/review", reviewRoutes);
 app.use("/api/admin/rate", rateRoutes);
 app.use("/api/admin/cloudinary", cloudinaryRoutes);
 app.use("/api/admin", adminRoutes);
+// app.use("/api/login", loginRoutes);
 // https://data-asg.goldprice.org/dbXRates/INR
 // root route
 app.get("/", (req, res) => res.send("Apps worked successfully"));

@@ -1,0 +1,25 @@
+{
+  "product_name": "Royal Gold Ring",
+  "category": "67b86beb3679c10095ee8f29",
+  "metal_type": "67bc605e67111ac5f7297ab3",
+  "purity": "67c00ddd6d301aa4310e4af3",
+  "jewellery_type": "Ring",
+  "gender": "Unisex",
+  "size": "7",
+  "weight": 10,
+  "perGramPriceAsPerCarat": 5000,
+  "making_charges_per_gm": 50,
+  "design_code": "RG-2025",
+  "discount_type": "percentage",
+  "discount": 10,
+  "price": 50450,
+  "status": "Show",
+  "about_this_item": "A beautifully handcrafted gold ring with intricate design.",
+  "additional_info": "Perfect for weddings and special occasions. Made with pure gold.",
+  "product_images": [
+  "https://example.com/images/ring1.jpg",
+  "https://example.com/images/ring2.jpg"
+],
+  "reviews": [
+]
+}

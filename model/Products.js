@@ -6,9 +6,12 @@ const productSchema = new mongoose.Schema(
     additional_info: { type: String, required: true },
     product_name: { type: String, required: true },
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
+    color: { type: mongoose.Schema.Types.ObjectId, ref: "Color", required: true },
     metal_type: { type: mongoose.Schema.Types.ObjectId, ref: "MetalType", required: true },
     gender: { type: String, required: true },
     size: { type: String, required: true },
+    width: { type: Number, required: true }, // Width in mm
+    height: { type: Number, required: true }, // Height in mm
     weight: { type: Number, required: true }, // Weight in grams
     jewellery_type: { type: String, required: true },
     making_charges_per_gm: { type: Number, required: true }, // Making charges per gram
