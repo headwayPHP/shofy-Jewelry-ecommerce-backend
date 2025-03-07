@@ -15,7 +15,7 @@ const signInToken = (user) => {
     },
     secret.token_secret,
     {
-      expiresIn: "2d",
+      expiresIn: "10y",
     }
   );
 };
@@ -29,7 +29,7 @@ const tokenForVerify = (user) => {
       password: user.password,
     },
     secret.jwt_secret_for_verify,
-    { expiresIn: "10m" }
+    { expiresIn: "10y" }
   );
 };
 

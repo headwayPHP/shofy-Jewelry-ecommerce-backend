@@ -78,11 +78,11 @@ exports.getProductTypePurity = async (req, res, next) => {
 // Delete purity (Use req.body.id instead of req.body)
 exports.deletePurity = async (req, res, next) => {
     try {
-        const result = await purityServices.deletePurityService(req.body.id);
+        const result = await purityServices.deletePurityService(req.params.id);
         res.status(200).json({
             success: true,
             message: "Purity deleted successfully",
-            data: result,
+            result: result,
         });
     } catch (error) {
         next(error);
@@ -92,7 +92,7 @@ exports.deletePurity = async (req, res, next) => {
 // Update purity (Use req.body.id instead of req.body)
 exports.updatePurity = async (req, res, next) => {
     try {
-        const result = await purityServices.updatePurityService(req.body.id, req.body);
+        const result = await purityServices.updatePurityService(req.params.id, req.body);
         res.status(200).json({
             status: "success",
             message: "Purity updated successfully",
@@ -106,10 +106,10 @@ exports.updatePurity = async (req, res, next) => {
 // Get single purity (Use req.body.id)
 exports.getSinglePurity = async (req, res, next) => {
     try {
-        const result = await purityServices.getSinglePurityService(req.body.id);
+        const result = await purityServices.getSinglePurityService(req.params.id);
         res.status(200).json({
             success: true,
-            data: result,
+            result,
         });
     } catch (error) {
         next(error);

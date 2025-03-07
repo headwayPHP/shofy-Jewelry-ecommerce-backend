@@ -7,14 +7,6 @@ const Review = require("../model/Review.js");
 // Create product service
 exports.createProductService = async (productData) => {
   try {
-    // Parse JSON fields (if sent as a string)
-    if (typeof productData.product_images === "string") {
-      productData.product_images = JSON.parse(productData.product_images);
-    }
-    if (typeof productData.reviews === "string") {
-      productData.reviews = JSON.parse(productData.reviews);
-    }
-
     // Validate required fields
     const requiredFields = [
       "about_this_item",
@@ -28,7 +20,7 @@ exports.createProductService = async (productData) => {
       "jewellery_type",
       "making_charges_per_gm",
       "purity",
-      "rate",
+      "rate", // Ensure rate is required
       "product_images",
     ];
 
@@ -38,10 +30,11 @@ exports.createProductService = async (productData) => {
       }
     }
 
+    // Create the product
     const product = new Product(productData);
-    await product.save();
+    await product.save(); // The price will be calculated and saved automatically by the pre-save middleware
 
-    return product; // Return the saved product
+    return product; // Return the saved product with the calculated price
   } catch (error) {
     throw error; // Throw the error to be handled by the caller
   }
@@ -49,65 +42,61 @@ exports.createProductService = async (productData) => {
 
 // Get all products
 exports.getAllProductsService = async () => {
-  const products = await Product.find({}).populate("reviews");
+  const products = await Product.find({})
+    .populate("rate")
+    .populate("reviews")
+    .populate("category")
+    .populate("metal_type")
+    .populate("purity");
 
-  // Base URL for images (replace with your actual domain)
-  const baseUrl = process.env.ADMIN_URL;
-
-  // Calculate prices for all products
-  const productsWithPrices = await Promise.all(
-    products.map(async (product) => {
-      const price = await product.getFinalPrice(); // Await the price calculation
-      return {
-        ...product.toObject(),
-        product_images: product.product_images.map((image) => {
-          if (image.startsWith("http")) {
-            return image;
-          }
-          return `${baseUrl}${image}`;
-        }),
-        price, // Include the calculated price
-        averageRating: product.averageRating,
-      };
-    })
-  );
+  // No need to calculate the price here since it's already stored in the database
+  const productsWithPrices = products.map((product) => ({
+    ...product.toObject(),
+    price: product.price, // Use the stored price
+    averageRating: product.averageRating,
+  }));
 
   return productsWithPrices;
 };
 
 // Get product by ID
 exports.getProductService = async (id) => {
-  const product = await Product.findById(id).populate({
-    path: "reviews",
-    populate: { path: "userId", select: "name email imageURL" },
-  });
+  const product = await Product.findById(id)
+    .populate({
+      path: "reviews",
+      populate: { path: "userId", select: "name email imageURL" },
+    })
+    .populate("rate")
+    .populate("category")
+    .populate("metal_type")
+    .populate("purity");
 
   if (!product) {
     throw new Error("Product not found");
   }
 
-  const price = await product.getFinalPrice(); // Use getFinalPrice instead of getSellingProductPrice
-
   return {
     ...product.toObject(),
-    price, // Include the calculated price
+    price: product.price, // Use the stored price
     averageRating: product.averageRating,
   };
 };
 
 // Get products by category
 exports.getProductsByCategoryService = async (categoryId) => {
-  const products = await Product.find({ category: categoryId }).populate("reviews");
-  const productsWithPrices = await Promise.all(
-    products.map(async (product) => {
-      const price = await product.getFinalPrice();
-      return {
-        ...product.toObject(),
-        price,
-        averageRating: product.averageRating,
-      };
-    })
-  );
+  const products = await Product.find({ category: categoryId })
+    .populate("reviews")
+    .populate("rate")
+    .populate("category")
+    .populate("metal_type")
+    .populate("purity");
+
+  const productsWithPrices = products.map((product) => ({
+    ...product.toObject(),
+    price: product.price, // Use the stored price
+    averageRating: product.averageRating,
+  }));
+
   return productsWithPrices;
 };
 
@@ -115,45 +104,55 @@ exports.getProductsByCategoryService = async (categoryId) => {
 exports.getTopRatedProductService = async () => {
   const products = await Product.find({ averageRating: { $gt: 0 } })
     .sort({ averageRating: -1 })
-    .populate("reviews");
-  const productsWithPrices = await Promise.all(
-    products.map(async (product) => {
-      const price = await product.getFinalPrice();
-      return {
-        ...product.toObject(),
-        price,
-        averageRating: product.averageRating,
-      };
-    })
-  );
+    .populate("reviews")
+    .populate("rate")
+    .populate("category")
+    .populate("metal_type")
+    .populate("purity");
+
+  const productsWithPrices = products.map((product) => ({
+    ...product.toObject(),
+    price: product.price, // Use the stored price
+    averageRating: product.averageRating,
+  }));
+
   return productsWithPrices;
 };
 
 // Get out-of-stock products
 exports.getStockOutProducts = async () => {
-  const products = await Product.find({ status: "Hide" }).sort({ createdAt: -1 });
-  const productsWithPrices = await Promise.all(
-    products.map(async (product) => {
-      const price = await product.getFinalPrice();
-      return {
-        ...product.toObject(),
-        price,
-      };
-    })
-  );
+  const products = await Product.find({ status: "Hide" })
+    .sort({ createdAt: -1 })
+    .populate("rate")
+    .populate("category")
+    .populate("metal_type")
+    .populate("purity");
+
+  const productsWithPrices = products.map((product) => ({
+    ...product.toObject(),
+    price: product.price, // Use the stored price
+  }));
+
   return productsWithPrices;
 };
 
 // Update product
 exports.updateProductService = async (id, updatedData) => {
-  const product = await Product.findByIdAndUpdate(id, updatedData, { new: true });
+  const product = await Product.findByIdAndUpdate(id, updatedData, {
+    new: true,
+  })
+    .populate("rate")
+    .populate("category")
+    .populate("metal_type")
+    .populate("purity");
+
   if (product) {
     await product.updateAverageRating(); // Recalculate rating if necessary
   }
-  const price = await product.getFinalPrice();
+
   return {
     ...product.toObject(),
-    price,
+    price: product.price, // Use the stored price
     averageRating: product.averageRating,
   };
 };

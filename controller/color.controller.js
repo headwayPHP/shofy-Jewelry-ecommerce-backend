@@ -78,7 +78,7 @@ exports.getProductTypeColor = async (req, res, next) => {
 // delete color
 exports.deleteColor = async (req, res, next) => {
     try {
-        const result = await colorServices.deleteColorService(req.body.id);
+        const result = await colorServices.deleteColorService(req.params.id);
         res.status(200).json({
             success: true,
             result,
@@ -91,7 +91,7 @@ exports.deleteColor = async (req, res, next) => {
 // update color
 exports.updateColor = async (req, res, next) => {
     try {
-        const result = await colorServices.updateColorService(req.body.id, req.body);
+        const result = await colorServices.updateColorService(req.params.id, req.body);
         res.status(200).json({
             status: 'success',
             message: 'Color update successfully',
@@ -105,8 +105,11 @@ exports.updateColor = async (req, res, next) => {
 // get single color
 exports.getSingleColor = async (req, res, next) => {
     try {
-        const result = await colorServices.getSingleColorService(req.body.id);
-        res.status(200).json(result)
+        const result = await colorServices.getSingleColorService(req.params.id);
+        res.status(200).json({
+            success: true,
+            result,
+        })
     } catch (error) {
         next(error)
     }

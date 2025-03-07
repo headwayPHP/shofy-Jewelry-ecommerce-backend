@@ -4,7 +4,7 @@ const router = express.Router();
 const purityController = require('../controller/purity.controller.js');
 
 // get
-router.get('/get', purityController.getSinglePurity);
+router.get('/get/:id', purityController.getSinglePurity);
 // add
 router.post('/add', purityController.addPurity);
 // add All Purity
@@ -16,8 +16,8 @@ router.get('/show/:type', purityController.getProductTypePurity);
 // get Show Purity
 router.get('/show', purityController.getShowPurity);
 // delete purity
-router.post('/delete', purityController.deletePurity);
+router.delete('/delete/:id', purityController.deletePurity);
 // delete product
-router.post('/edit', purityController.updatePurity);
+router.put('/edit/:id', purityController.updatePurity);
 
 module.exports = router;

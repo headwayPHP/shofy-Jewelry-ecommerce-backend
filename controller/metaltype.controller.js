@@ -80,7 +80,7 @@ exports.getProductTypeMetalType = async (req, res, next) => {
 // delete metaltype
 exports.deleteMetalType = async (req, res, next) => {
     try {
-        const result = await metaltypeServices.deleteMetalTypeService(req.body.id);
+        const result = await metaltypeServices.deleteMetalTypeService(req.params.id);
         res.status(200).json({
             success: true,
             result,
@@ -93,7 +93,7 @@ exports.deleteMetalType = async (req, res, next) => {
 // update metaltype
 exports.updateMetalType = async (req, res, next) => {
     try {
-        const result = await metaltypeServices.updateMetalTypeService(req.body.id, req.body);
+        const result = await metaltypeServices.updateMetalTypeService(req.params.id, req.body);
         res.status(200).json({
             status: 'success',
             message: 'MetalType update successfully',
@@ -107,8 +107,11 @@ exports.updateMetalType = async (req, res, next) => {
 // get single metaltype
 exports.getSingleMetalType = async (req, res, next) => {
     try {
-        const result = await metaltypeServices.getSingleMetalTypeService(req.body.id);
-        res.status(200).json(result)
+        const result = await metaltypeServices.getSingleMetalTypeService(req.params.id);
+        res.status(200).json({
+            success: true,
+            result: result,
+        })
     } catch (error) {
         next(error)
     }

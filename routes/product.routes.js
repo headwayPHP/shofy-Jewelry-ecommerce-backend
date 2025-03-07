@@ -34,14 +34,14 @@ router.get("/top-rated", productController.getTopRatedProducts);
 router.get("/review-product/:productId", productController.reviewProducts);
 router.get("/popular", productController.getPopularProductByType);
 router.get("/related-product", productController.getRelatedProducts);
-router.get("/product", productController.getSingleProduct);
+router.get("/show/:id", productController.getSingleProduct);
 router.get("/stock-out", productController.stockOutProducts);
 // router.get("/", productController.getProductsByType);
 
 // 🔹 Product Modification Routes
 router.post("/add", upload.array("product_images", 5), productController.addProduct);
 router.post("/add-all", productController.addAllProducts);
-router.patch("/edit-product", protect, adminOnly, upload.array("product_images", 5), productController.updateProduct);
-router.post("/delete", productController.deleteProduct); // Use route parameter instead of body
+router.put("/edit/:id", upload.array("product_images", 5), productController.updateProduct);
+router.delete("/delete/:id", productController.deleteProduct); // Use route parameter instead of body
 
 module.exports = router;

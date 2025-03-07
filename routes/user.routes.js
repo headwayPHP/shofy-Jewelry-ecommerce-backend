@@ -39,4 +39,16 @@ router.get('/hello', (req, res) => {
     res.send('Hello World')
 })
 
+// Get all users
+router.get('/all', userController.getAllUsers); // for admins only
+
+
+// Get a particular user by ID
+router.get('/:id', userController.getUserById);
+
+// Update a user
+router.put('/update/:id', userController.updateUser);
+
 module.exports = router;
+
+// email , name, subject, message , remember: boolean

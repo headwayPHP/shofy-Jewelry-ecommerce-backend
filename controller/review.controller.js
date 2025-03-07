@@ -1,7 +1,8 @@
 const {
   addReviewService,
   getReviewsByProductService,
-  deleteReviewService, // Updated function name
+  deleteReviewService,
+  updateReviewService,
 } = require("../services/review.service.js");
 
 // Add a review
@@ -21,7 +22,7 @@ exports.addReview = async (req, res, next) => {
 // Get all reviews for a specific product
 exports.getReviewsByProduct = async (req, res, next) => {
   try {
-    const { productId } = req.params;
+    const { productId } = req.body;
     const reviews = await getReviewsByProductService(productId);
     res.status(200).json({
       success: true,
@@ -32,10 +33,33 @@ exports.getReviewsByProduct = async (req, res, next) => {
   }
 };
 
+// Update a review by review ID
+exports.updateReview = async (req, res, next) => {
+  try {
+    const { reviewId, rating, comment } = req.body;
+
+    if (!reviewId) {
+      return res.status(400).json({
+        success: false,
+        message: "Review ID is required.",
+      });
+    }
+
+    const updatedReview = await updateReviewService(reviewId, { rating, comment });
+    res.status(200).json({
+      success: true,
+      message: "Review updated successfully.",
+      review: updatedReview,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Delete a single review by review ID
 exports.deleteReview = async (req, res, next) => {
   try {
-    const { reviewId } = req.body; // Expecting reviewId in the request body
+    const { reviewId } = req.body;
 
     if (!reviewId) {
       return res.status(400).json({

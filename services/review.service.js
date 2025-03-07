@@ -7,21 +7,21 @@ const User = require("../model/User.js");
 // Add a review
 exports.addReviewService = async ({ userId, productId, rating, comment }) => {
     // Check if the user has already left a review for this product
-    const existingReview = await Review.findOne({ userId, productId });
+    // const existingReview = await Review.findOne({ userId, productId });
 
-    if (existingReview) {
-        throw new Error("You have already left a review for this product.");
-    }
+    // if (existingReview) {
+    //     throw new Error("You have already left a review for this product.");
+    // }
 
-    // Check if the user has purchased the product before reviewing
-    const checkPurchase = await Order.findOne({
-        userId: new mongoose.Types.ObjectId(userId),
-        "cart.productId": productId, // Ensure correct field reference
-    });
+    // // Check if the user has purchased the product before reviewing
+    // const checkPurchase = await Order.findOne({
+    //     userId: new mongoose.Types.ObjectId(userId),
+    //     "cart.productId": productId, // Ensure correct field reference
+    // });
 
-    if (!checkPurchase) {
-        throw new Error("You must purchase the product before leaving a review!");
-    }
+    // if (!checkPurchase) {
+    //     throw new Error("You must purchase the product before leaving a review!");
+    // }
 
     // Create and save the new review
     const review = await Review.create({ userId, productId, rating, comment });
@@ -48,6 +48,38 @@ exports.getReviewsByProductService = async (productId) => {
     }
 
     return reviews;
+};
+
+// Update a review by review ID
+exports.updateReviewService = async (reviewId, { rating, comment }) => {
+    // Find the review by ID
+    const review = await Review.findById(reviewId);
+    if (!review) {
+        throw new Error("Review not found.");
+    }
+
+    // Update the review fields
+    if (rating !== undefined) {
+        review.rating = rating;
+    }
+    if (comment !== undefined) {
+        review.comment = comment;
+    }
+
+    // Save the updated review
+    await review.save();
+
+    // Recalculate the product's average rating
+    const reviews = await Review.find({ productId: review.productId });
+    const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
+    const averageRating = totalRating / reviews.length;
+
+    // Update the product's average rating
+    await Product.findByIdAndUpdate(review.productId, {
+        $set: { averageRating: averageRating.toFixed(1) },
+    });
+
+    return review;
 };
 
 // Delete a single review by review ID

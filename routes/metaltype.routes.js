@@ -4,7 +4,7 @@ const router = express.Router();
 const metaltypeController = require('../controller/metaltype.controller');
 
 // get
-router.get('/get', metaltypeController.getSingleMetalType);
+router.get('/get/:id', metaltypeController.getSingleMetalType);
 // add
 router.post('/add', metaltypeController.addMetalType);
 // add All MetalType
@@ -16,8 +16,8 @@ router.get('/show/:type', metaltypeController.getProductTypeMetalType);
 // get Show MetalType
 router.get('/show', metaltypeController.getShowMetalType);
 // delete metaltype
-router.post('/delete', metaltypeController.deleteMetalType);
+router.delete('/delete/:id', metaltypeController.deleteMetalType);
 // delete product
-router.post('/edit', metaltypeController.updateMetalType);
+router.put('/edit/:id', metaltypeController.updateMetalType);
 
 module.exports = router;

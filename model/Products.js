@@ -23,7 +23,7 @@ const productSchema = new mongoose.Schema(
     purity: { type: mongoose.Schema.Types.ObjectId, ref: "Purity", required: true }, // Metal purity
     rate: { type: mongoose.Schema.Types.ObjectId, ref: "Rate", required: true }, // Reference to rates table
     status: { type: String, enum: ["Show", "Hide"], default: "Show" },
-
+    price: { type: Number, default: 0 }, // Add this field to store the calculated price
     // Reviews & Ratings
     reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "Review" }],
     averageRating: { type: Number, default: 0 },
@@ -35,10 +35,22 @@ const productSchema = new mongoose.Schema(
  * **Method to fetch per gram price from rates table**
  */
 productSchema.methods.getPerGramPrice = async function () {
+  if (!this.rate) {
+    console.error("Rate field is missing for product:", this._id);
+    return 0;
+  }
+
   const Rate = mongoose.model("Rate");
   const rateData = await Rate.findById(this.rate);
-  return rateData ? rateData.perGramPriceAsPerCarat : 0;
-};
+
+  if (!rateData) {
+    console.error("Rate not found for ID:", this.rate);
+    return 0;
+  }
+
+  console.log("Rate Data:", rateData); // Debugging
+  return rateData.rate || 0;
+};;
 
 /**
  * **Method to calculate material cost**
@@ -87,22 +99,73 @@ productSchema.methods.getDiscountedMakingCharges = async function () {
  * Formula: finalPrice = materialCost + discountedMakingCharges + (3% of materialCost) + (5% of discountedMakingCharges)
  */
 productSchema.methods.getFinalPrice = async function () {
-  const materialCost = await this.getMaterialCost();
-  const discountedMakingCharges = await this.getDiscountedMakingCharges();
+  try {
+    const materialCost = await this.getMaterialCost();
+    console.log("Material Cost:", materialCost); // Debugging
 
-  // Tax calculation
-  const taxOnMaterial = materialCost * 0.03; // 3% tax on material cost
-  const taxOnMakingCharges = discountedMakingCharges * 0.05; // 5% tax on making charges
+    const discountedMakingCharges = await this.getDiscountedMakingCharges();
+    console.log("Discounted Making Charges:", discountedMakingCharges); // Debugging
 
-  // Final price
-  return materialCost + discountedMakingCharges + taxOnMaterial + taxOnMakingCharges;
-};
+    // Tax calculation
+    const taxOnMaterial = materialCost * 0.03; // 3% tax on material cost
+    const taxOnMakingCharges = discountedMakingCharges * 0.05; // 5% tax on making charges
+
+    // Final price
+    const finalPrice = materialCost + discountedMakingCharges + taxOnMaterial + taxOnMakingCharges;
+    console.log("Final Price:", finalPrice); // Debugging
+
+    return finalPrice;
+  } catch (error) {
+    console.error("Error calculating final price:", error);
+    return null; // Return null if there's an error
+  }
+};;
 
 /**
- * **Virtual field for final price after tax**
+ * **Middleware to calculate and save the price before saving the product**
  */
-productSchema.virtual("price").get(async function () {
-  return await this.getFinalPrice();
+productSchema.pre("save", async function (next) {
+  try {
+    // Calculate the final price
+    const finalPrice = await this.getFinalPrice();
+    this.price = finalPrice || 0; // Store the calculated price in the price field
+    next();
+  } catch (error) {
+    console.error("Error calculating price during save:", error);
+    next(error);
+  }
+});
+
+/**
+ * **Middleware to calculate and save the price before updating the product**
+ */
+productSchema.pre("findOneAndUpdate", async function (next) {
+  try {
+    const update = this.getUpdate();
+    const product = await this.model.findOne(this.getQuery());
+
+    if (!product) {
+      return next(new Error("Product not found"));
+    }
+
+    // Recalculate the price if relevant fields are updated
+    if (
+      update.weight ||
+      update.rate ||
+      update.making_charges_per_gm ||
+      update.making_type ||
+      update.discount_type ||
+      update.discount
+    ) {
+      const finalPrice = await product.getFinalPrice();
+      update.price = finalPrice || 0; // Update the price field
+    }
+
+    next();
+  } catch (error) {
+    console.error("Error calculating price during update:", error);
+    next(error);
+  }
 });
 
 /**

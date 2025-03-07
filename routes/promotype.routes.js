@@ -4,7 +4,7 @@ const router = express.Router();
 const promotypeController = require('../controller/promotype.controller.js');
 
 // get
-router.get('/get', promotypeController.getSinglePromoType);
+router.get('/get/:id', promotypeController.getSinglePromoType);
 // add
 router.post('/add', promotypeController.addPromoType);
 // add All PromoType
@@ -16,9 +16,9 @@ router.get('/show/:type', promotypeController.getProductTypePromoType);
 // get Show PromoType
 router.get('/show', promotypeController.getShowPromoType);
 // delete promotype
-router.post('/delete', promotypeController.deletePromoType);
+router.delete('/delete/:id', promotypeController.deletePromoType);
 // delete product
-router.post('/edit', promotypeController.updatePromoType);
+router.put('/edit/:id', promotypeController.updatePromoType);
 
 module.exports = router;
 

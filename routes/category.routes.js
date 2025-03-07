@@ -2,11 +2,13 @@ const express = require('express');
 const router = express.Router();
 // internal
 const categoryController = require('../controller/category.controller');
+const upload = require('../config/multerConfig');
 
 // get
-router.get('/get', categoryController.getSingleCategory);
+router.get('/get/:id', categoryController.getSingleCategory);
 // add
-router.post('/add', categoryController.addCategory);
+// router.post('/add', categoryController.addCategory);
+router.post('/add', upload.single('category_image'), categoryController.addCategory);
 // add All Category
 router.post('/add-all', categoryController.addAllCategory);
 // get all Category
@@ -16,8 +18,8 @@ router.get('/show/:type', categoryController.getProductTypeCategory);
 // get Show Category
 router.get('/show', categoryController.getShowCategory);
 // delete category
-router.post('/delete', categoryController.deleteCategory);
+router.delete('/delete/:id', categoryController.deleteCategory);
 // delete product
-router.post('/edit', categoryController.updateCategory);
+router.put('/edit/:id', categoryController.updateCategory);
 
 module.exports = router;

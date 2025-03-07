@@ -4,6 +4,7 @@ const User = require("../model/User");
 const { sendEmail } = require("../config/email");
 const { generateToken, tokenForVerify } = require("../utils/token");
 const { secret } = require("../config/secret");
+const mongoose = require('mongoose');
 
 // register user
 // sign up
@@ -53,6 +54,109 @@ exports.signup = async (req, res, next) => {
     next(error)
   }
 };
+
+// Get all users
+exports.getAllUsers = async (req, res, next) => {
+  try {
+    const users = await User.find({}).select('-password -confirmationToken -confirmationTokenExpires -passwordResetToken -passwordResetExpires -passwordChangedAt');
+    res.status(200).json({
+      status: "success",
+      data: users,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update a user
+
+exports.updateUser = async (req, res, next) => {
+  try {
+    const userId = req.params.id;
+
+    // Validate userId
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Invalid user ID",
+      });
+    }
+
+    const updates = req.body;
+
+    // Log userId and updates for debugging
+    console.log("User ID:", userId);
+    console.log("Updates:", updates);
+
+    // Ensure that the password is not updated directly through this endpoint
+    if (updates.password) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Password cannot be updated through this endpoint.",
+      });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updates, {
+      new: true,
+      runValidators: true,
+    }).select('-password -confirmationToken -confirmationTokenExpires -passwordResetToken -passwordResetExpires -passwordChangedAt');
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        status: "fail",
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "User updated successfully",
+      data: {
+        user: updatedUser,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};;;
+
+// Get a particular user by ID
+exports.getUserById = async (req, res, next) => {
+  try {
+
+    const userId = req.params.id;
+
+    // Check if the userId is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID",
+      });
+    }
+
+    // Find the user by ID and exclude sensitive fields
+    const user = await User.findById(userId).select(
+      '-password -confirmationToken -confirmationTokenExpires -passwordResetToken -passwordResetExpires -passwordChangedAt'
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        status: "fail",
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        user,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 /**
  * 1. Check if Email and password are given
@@ -277,31 +381,31 @@ exports.changePassword = async (req, res, next) => {
 };
 
 // update a profile
-exports.updateUser = async (req, res, next) => {
-  try {
-    const userId = req.params.id
-    const user = await User.findById(userId);
-    if (user) {
-      user.name = req.body.name;
-      user.email = req.body.email;
-      user.phone = req.body.phone;
-      user.address = req.body.address;
-      user.bio = req.body.bio;
-      const updatedUser = await user.save();
-      const token = generateToken(updatedUser);
-      res.status(200).json({
-        status: "success",
-        message: "Successfully updated profile",
-        data: {
-          user: updatedUser,
-          token,
-        },
-      });
-    }
-  } catch (error) {
-    next(error)
-  }
-};
+// exports.updateUser = async (req, res, next) => {
+//   try {
+//     const userId = req.body.id
+//     const user = await User.findById(userId);
+//     if (user) {
+//       user.name = req.body.name;
+//       user.email = req.body.email;
+//       user.phone = req.body.phone;
+//       user.address = req.body.address;
+//       user.bio = req.body.bio;
+//       const updatedUser = await user.save();
+//       const token = generateToken(updatedUser);
+//       res.status(200).json({
+//         status: "success",
+//         message: "Successfully updated profile",
+//         data: {
+//           user: updatedUser,
+//           token,
+//         },
+//       });
+//     }
+//   } catch (error) {
+//     next(error)
+//   }
+// };
 
 // signUpWithProvider
 exports.signUpWithProvider = async (req, res, next) => {

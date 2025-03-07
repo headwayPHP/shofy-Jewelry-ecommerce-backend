@@ -12,6 +12,7 @@ const globalErrorHandler = require("./middleware/global-error-handler");
 // routes
 const userRoutes = require("./routes/user.routes");
 const categoryRoutes = require("./routes/category.routes");
+const contactusRoutes = require("./routes/contactus.routes");
 const promotypeRoutes = require("./routes/promotype.routes");
 const colorRoutes = require("./routes/color.routes");
 const purityRoutes = require("./routes/purity.routes");
@@ -43,20 +44,22 @@ async function syncIndexes() {
 connectDB();
 
 app.use("/api/user", userRoutes);
-app.use("/api/admin/category", categoryRoutes);
-app.use("/api/admin/promotype", promotypeRoutes);
-app.use("/api/admin/color", colorRoutes);
-app.use("/api/admin/purity", purityRoutes);
-app.use("/api/admin/metaltype", metalTypeRoutes);
-app.use("/api/admin/brand", brandRoutes);
-app.use("/api/admin/product", productRoutes);
-app.use('/api/admin/upload', uploadRouter);
-app.use("/api/admin/order", orderRoutes);
-app.use("/api/admin/coupon", couponRoutes);
-app.use("/api/admin/user-order", userOrderRoutes);
-app.use("/api/admin/review", reviewRoutes);
-app.use("/api/admin/rate", rateRoutes);
-app.use("/api/admin/cloudinary", cloudinaryRoutes);
+app.use("/api/category", categoryRoutes);
+app.use("/api/contactus", contactusRoutes);
+app.use("/api/contactus", contactusRoutes);
+app.use("/api/promotype", promotypeRoutes);
+app.use("/api/color", colorRoutes);
+app.use("/api/purity", purityRoutes);
+app.use("/api/metaltype", metalTypeRoutes);
+app.use("/api/brand", brandRoutes);
+app.use("/api/product", productRoutes);
+app.use('/api/upload', uploadRouter);
+app.use("/api/order", orderRoutes);
+app.use("/api/coupon", couponRoutes);
+app.use("/api/user-order", userOrderRoutes);
+app.use("/api/review", reviewRoutes);
+app.use("/api/rate", rateRoutes);
+app.use("/api/cloudinary", cloudinaryRoutes);
 app.use("/api/admin", adminRoutes);
 // app.use("/api/login", loginRoutes);
 // https://data-asg.goldprice.org/dbXRates/INR

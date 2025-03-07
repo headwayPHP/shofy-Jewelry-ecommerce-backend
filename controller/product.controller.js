@@ -14,26 +14,26 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// add product
+// Add product
 exports.addProduct = async (req, res, next) => {
-  console.log('product--->', req.body);
+  console.log("product--->", req.body);
   try {
     if (!req.body.rate) {
       return res.status(400).json({
         success: false,
         message: "Validation Error",
-        errorMessages: [{ path: "rate", message: "Path `rate` is required." }]
+        errorMessages: [{ path: "rate", message: "Path `rate` is required." }],
       });
     }
 
-    const product_images = req.files ? req.files.map(file => file.path) : [];
+    const product_images = req.files ? req.files.map((file) => file.path) : [];
 
     const result = await productServices.createProductService({
       ...req.body,
       product_images,
     });
 
-    console.log('product-result', result);
+    console.log("product-result", result);
 
     res.status(200).json({
       success: true,
@@ -43,15 +43,16 @@ exports.addProduct = async (req, res, next) => {
     });
   } catch (error) {
     console.log(error);
-    next(error);
+    next(error); // Pass the error to the error-handling middleware
   }
 };
 
+// Add all products
 module.exports.addAllProducts = async (req, res, next) => {
   try {
     const result = await productServices.addAllProductService(req.body);
     res.json({
-      message: 'Products added successfully',
+      message: "Products added successfully",
       result,
     });
   } catch (error) {
@@ -59,7 +60,7 @@ module.exports.addAllProducts = async (req, res, next) => {
   }
 };
 
-// get all products
+// Get all products
 exports.getAllProducts = async (req, res, next) => {
   try {
     const result = await productServices.getAllProductsService();
@@ -72,7 +73,7 @@ exports.getAllProducts = async (req, res, next) => {
   }
 };
 
-// get all products by type
+// Get all products by type
 module.exports.getProductsByType = async (req, res, next) => {
   try {
     const result = await productServices.getProductTypeService(req);
@@ -86,7 +87,7 @@ module.exports.getProductsByType = async (req, res, next) => {
   }
 };
 
-// get offer product controller
+// Get offer product controller
 module.exports.getOfferTimerProducts = async (req, res, next) => {
   try {
     const result = await productServices.getOfferTimerProductService(req.query.type);
@@ -99,7 +100,7 @@ module.exports.getOfferTimerProducts = async (req, res, next) => {
   }
 };
 
-// get Popular Product By Type
+// Get popular product by type
 module.exports.getPopularProductByType = async (req, res, next) => {
   try {
     const result = await productServices.getPopularProductServiceByType(req.params.type);
@@ -112,7 +113,7 @@ module.exports.getPopularProductByType = async (req, res, next) => {
   }
 };
 
-// get top rated Products
+// Get top-rated products
 module.exports.getTopRatedProducts = async (req, res, next) => {
   try {
     const result = await productServices.getTopRatedProductService();
@@ -125,9 +126,10 @@ module.exports.getTopRatedProducts = async (req, res, next) => {
   }
 };
 
-// getSingleProduct
+// Get single product
 exports.getSingleProduct = async (req, res, next) => {
   try {
+
     const product = await productServices.getProductService(req.params.id);
     res.json(product);
   } catch (error) {
@@ -135,7 +137,7 @@ exports.getSingleProduct = async (req, res, next) => {
   }
 };
 
-// get Related Product
+// Get related products
 exports.getRelatedProducts = async (req, res, next) => {
   try {
     const products = await productServices.getRelatedProductService(req.params.id);
@@ -148,7 +150,7 @@ exports.getRelatedProducts = async (req, res, next) => {
   }
 };
 
-// update product
+// Update product
 exports.updateProduct = async (req, res, next) => {
   try {
     const product = await productServices.updateProductService(req.params.id, req.body);
@@ -158,7 +160,7 @@ exports.updateProduct = async (req, res, next) => {
   }
 };
 
-// update product
+// Get review products
 exports.reviewProducts = async (req, res, next) => {
   try {
     const products = await productServices.getReviewsProducts();
@@ -171,7 +173,7 @@ exports.reviewProducts = async (req, res, next) => {
   }
 };
 
-// update product
+// Get out-of-stock products
 exports.stockOutProducts = async (req, res, next) => {
   try {
     const products = await productServices.getStockOutProducts();
@@ -184,12 +186,12 @@ exports.stockOutProducts = async (req, res, next) => {
   }
 };
 
-// update product
+// Delete product
 exports.deleteProduct = async (req, res, next) => {
   try {
-    await productServices.deleteProduct(req.body.id);
+    await productServices.deleteProduct(req.params.id);
     res.status(200).json({
-      message: 'Product delete successfully',
+      message: "Product deleted successfully",
     });
   } catch (error) {
     next(error);
