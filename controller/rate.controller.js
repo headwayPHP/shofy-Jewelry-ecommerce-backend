@@ -1,5 +1,34 @@
 const rateService = require("../services/rate.service");
 
+const Rate = require("../model/Rate");
+
+/**
+ * **Update Rates and Recalculate Product Prices**
+ */
+exports.updateRatesAndProductPrices = async (req, res) => {
+    try {
+        const { gold_rate, silver_rate, platinum_rate } = req.body;
+
+        // At least one rate must be provided
+        if (gold_rate === undefined && silver_rate === undefined && platinum_rate === undefined) {
+            return res.status(400).json({ message: "At least one rate (gold, silver, platinum) is required" });
+        }
+
+        const updatedRates = await Rate.updateRatesAndProductPrices({
+            gold_rate,
+            silver_rate,
+            platinum_rate,
+        });
+
+        res.status(200).json({
+            message: "Rates updated and product prices recalculated successfully",
+            updatedRates,
+        });
+    } catch (error) {
+        console.error("Error updating rates and product prices:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
 // Create a new rate
 exports.createRate = async (req, res) => {
     try {

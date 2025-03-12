@@ -2,6 +2,7 @@ const {
   addReviewService,
   getReviewsByProductService,
   deleteReviewService,
+  getAllReviewsService,
   updateReviewService,
 } = require("../services/review.service.js");
 
@@ -18,6 +19,17 @@ exports.addReview = async (req, res, next) => {
     next(error);
   }
 };
+exports.getAllReviews = async (req, res, next) => {
+  try {
+    const reviews = await getAllReviewsService();
+    res.status(200).json({
+      success: true,
+      reviews,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
 
 // Get all reviews for a specific product
 exports.getReviewsByProduct = async (req, res, next) => {

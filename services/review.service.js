@@ -4,6 +4,26 @@ const Product = require("../model/Products.js");
 const Review = require("../model/Review.js");
 const User = require("../model/User.js");
 
+
+exports.getAllReviewsService = async () => {
+    const reviews = await Review.find()
+        .populate("userId") // Populates user details
+        .populate("productId"); // Populates product details
+
+    if (!reviews.length) {
+        throw new Error("No reviews found.");
+    }
+
+    // Map through reviews and add product name field
+    const updatedReviews = reviews.map(review => ({
+        ...review.toObject(), // Convert Mongoose document to plain object
+        name: review.productId ? review.productId.product_name : null
+    }));
+
+    return updatedReviews;
+};
+
+
 // Add a review
 exports.addReviewService = async ({ userId, productId, rating, comment }) => {
     // Check if the user has already left a review for this product

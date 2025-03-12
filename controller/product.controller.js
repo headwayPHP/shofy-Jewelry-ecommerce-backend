@@ -26,7 +26,11 @@ exports.addProduct = async (req, res, next) => {
       });
     }
 
-    const product_images = req.files ? req.files.map((file) => file.path) : [];
+    const product_images = req.files
+        ? req.files.map((file) =>
+            file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+        )
+        : [];
 
     const result = await productServices.createProductService({
       ...req.body,
@@ -43,9 +47,11 @@ exports.addProduct = async (req, res, next) => {
     });
   } catch (error) {
     console.log(error);
-    next(error); // Pass the error to the error-handling middleware
+    next(error);
   }
 };
+;
+;
 
 // Add all products
 module.exports.addAllProducts = async (req, res, next) => {
@@ -63,15 +69,26 @@ module.exports.addAllProducts = async (req, res, next) => {
 // Get all products
 exports.getAllProducts = async (req, res, next) => {
   try {
+    const baseUrl = `${req.protocol}://${req.get("host")}/`; // Get base URL dynamically
     const result = await productServices.getAllProductsService();
+
+    // Modify product_images to include the full URL
+    const updatedResult = result.map((product) => ({
+      ...product,
+      product_images: product.product_images.map(
+          (img) => `${baseUrl}${img}`
+      ),
+    }));
+
     res.status(200).json({
       success: true,
-      data: result,
+      data: updatedResult,
     });
   } catch (error) {
     next(error);
   }
 };
+;
 
 // Get all products by type
 module.exports.getProductsByType = async (req, res, next) => {
