@@ -22,13 +22,13 @@ exports.addAllPurityService = async (data) => {
 
 // get all show purity service
 exports.getShowPurityServices = async () => {
-    const purity = await Purity.find({ status: 'Show' }).populate('products');
+    const purity = await Purity.find({ status: 'Show' }).populate('products').populate('metal_type');
     return purity;
 }
 
 // get all purity 
 exports.getAllPurityServices = async () => {
-    const purity = await Purity.find({})
+    const purity = await Purity.find({}).populate('metal_type');
     return purity;
 }
 
@@ -55,11 +55,11 @@ exports.updatePurityService = async (id, payload) => {
     const result = await Purity.findOneAndUpdate({ _id: id }, payload, {
         new: true,
     })
-    return result
+    return result.populate('metal_type');
 }
 
 // get single purity
 exports.getSinglePurityService = async (id) => {
-    const result = await Purity.findById(id);
+    const result = await Purity.findById(id).populate('metal_type');
     return result;
 }

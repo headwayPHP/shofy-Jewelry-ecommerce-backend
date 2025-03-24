@@ -48,7 +48,7 @@ exports.deleteCategoryService = async (id) => {
   const result = await Category.findByIdAndDelete(id);
   return result;
 }
-
+// TODO: add 3 default prices of gold/silver/platinum in dashboard API
 // update category
 exports.updateCategoryService = async (id, payload) => {
   const isExist = await Category.findOne({ _id: id })

@@ -14,23 +14,37 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+
+// const multer = require("multer");
+
+// // Multer setup for handling file uploads with size limit
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, "uploads/"); // Ensure this directory exists
+//   },
+//   filename: function (req, file, cb) {
+//     cb(null, Date.now() + "-" + file.originalname);
+//   },
+// });
+
+// // Set a file size limit (e.g., 50MB)
+// const upload = multer({
+//   storage: storage,
+//   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB file size limit
+// });
+
+// module.exports = upload;
+
+
 // Add product
 exports.addProduct = async (req, res, next) => {
   console.log("product--->", req.body);
   try {
-    if (!req.body.rate) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation Error",
-        errorMessages: [{ path: "rate", message: "Path `rate` is required." }],
-      });
-    }
-
     const product_images = req.files
-        ? req.files.map((file) =>
-            file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
-        )
-        : [];
+      ? req.files.map((file) =>
+        file.path.replace(/^public[\\/]/, "").replace(/\\/g, "/")
+      )
+      : [];
 
     const result = await productServices.createProductService({
       ...req.body,
@@ -50,8 +64,6 @@ exports.addProduct = async (req, res, next) => {
     next(error);
   }
 };
-;
-;
 
 // Add all products
 module.exports.addAllProducts = async (req, res, next) => {
@@ -76,7 +88,7 @@ exports.getAllProducts = async (req, res, next) => {
     const updatedResult = result.map((product) => ({
       ...product,
       product_images: product.product_images.map(
-          (img) => `${baseUrl}${img}`
+        (img) => `${baseUrl}${img}`
       ),
     }));
 
@@ -88,7 +100,25 @@ exports.getAllProducts = async (req, res, next) => {
     next(error);
   }
 };
-;
+exports.getAllProductsWeb = async (req, res, next) => {
+  try {
+    const baseUrl = `${req.protocol}://${req.get("host")}/`; // Get base URL dynamically
+    const result = await productServices.getWebProductsService();
+
+    // Modify the `img` field to include the full URL
+    const updatedResult = result.map((product) => ({
+      ...product,
+      img: product.img ? `${baseUrl}${product.img}` : null, // Add base URL to the image path
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: updatedResult,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // Get all products by type
 module.exports.getProductsByType = async (req, res, next) => {
@@ -146,37 +176,85 @@ module.exports.getTopRatedProducts = async (req, res, next) => {
 // Get single product
 exports.getSingleProduct = async (req, res, next) => {
   try {
-
     const product = await productServices.getProductService(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ status: false, message: "Product not found" });
+    }
+
+    // Modify product_images to include the full URL
+    product.product_images = product.product_images.map((img) => `${process.env.ADMIN_URL}${img}`);
+
+    res.json(product);
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getSingleWebProduct = async (req, res, next) => {
+  try {
+    const product = await productServices.getWebProductService(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ status: false, message: "Product not found" });
+    }
+
+    // Modify product_images to include the full URL
+    product.product_images = product.product_images.map((img) => `${process.env.ADMIN_URL}${img}`);
+    product.category.category_image = `${process.env.ADMIN_URL}${product.category.category_image}`;
+
     res.json(product);
   } catch (error) {
     next(error);
   }
 };
 
-// Get related products
+
 exports.getRelatedProducts = async (req, res, next) => {
   try {
-    const products = await productServices.getRelatedProductService(req.params.id);
+    const relatedProducts = await productServices.getRelatedProductService(req.params.id);
+
+    if (!relatedProducts || relatedProducts.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+        message: 'No related products found'
+      });
+    }
+    // console.log(relatedProducts[0].product_images);
+    // console.log(relatedProducts[0].product_images);
+    // relatedProducts[0].product_images = relatedProducts[0].product_images.map((img) => `${process.env.ADMIN_URL}${img}`);
+    relatedProducts.forEach((relatedProduct) => {
+      relatedProduct.product_images = relatedProduct.product_images.map((img) => `${process.env.ADMIN_URL}${img}`);
+    })
     res.status(200).json({
       success: true,
-      data: products,
+      data: relatedProducts
     });
   } catch (error) {
-    next(error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+      errorMessages: [{
+        path: '',
+        message: error.message
+      }]
+    });
   }
 };
 
 // Update product
 exports.updateProduct = async (req, res, next) => {
   try {
-    const product = await productServices.updateProductService(req.params.id, req.body);
+    const product = await productServices.updateProductService(
+      req.params.id, // Product ID
+      req.body,     // Updated product data
+      req.files     // Uploaded images
+    );
     res.send({ data: product, message: "Product updated successfully!" });
   } catch (error) {
     next(error);
   }
 };
-
 // Get review products
 exports.reviewProducts = async (req, res, next) => {
   try {

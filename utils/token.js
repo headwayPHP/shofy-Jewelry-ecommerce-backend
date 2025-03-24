@@ -9,10 +9,14 @@ exports.generateToken = (userInfo) => {
     role: userInfo.role,
   };
 
-  const token = jwt.sign(payload,secret.token_secret, {
+  console.log("Payload for Token:", payload);
+  console.log("Token Secret:", secret.token_secret);
+
+  const token = jwt.sign(payload, secret.token_secret, {
     expiresIn: "2d",
   });
 
+  console.log("Generated Token:", token);
   return token;
 };
 

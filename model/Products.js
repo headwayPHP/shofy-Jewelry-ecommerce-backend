@@ -1,27 +1,29 @@
 const mongoose = require("mongoose");
 
+// color: [{ type: mongoose.Schema.Types.ObjectId, ref: "Color", required: true }],
 const productSchema = new mongoose.Schema(
   {
     about_this_item: { type: String, required: true },
-    additional_info: { type: String, required: true },
+    additional_info: { type: String, required: null },
     product_name: { type: String, required: true },
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
-    color: { type: mongoose.Schema.Types.ObjectId, ref: "Color", required: true },
     metal_type: { type: mongoose.Schema.Types.ObjectId, ref: "MetalType", required: true },
     gender: { type: String, required: true },
-    size: { type: String, required: true },
+    size: { type: String, required: null },
     width: { type: Number, required: true }, // Width in mm
     height: { type: Number, required: true }, // Height in mm
     weight: { type: Number, required: true }, // Weight in grams
-    jewellery_type: { type: String, required: true },
+    quantity: { type: Number, required: false }, // Quantity of the product
+    promo_type: { type: mongoose.Schema.Types.ObjectId, ref: "PromoType", required: false },
+    jewellery_type: { type: String, required: null },
     making_charges_per_gm: { type: Number, required: true }, // Making charges per gram
     making_type: { type: String, enum: ["percentage", "flat"], default: "flat" }, // Making charge type
     design_code: { type: String },
     product_images: [{ type: String, required: true }],
     discount_type: { type: String, enum: ["none", "flat", "percentage"], default: "none" },
     discount: { type: Number, default: 0, min: 0 }, // Discount must be non-negative
-    purity: { type: mongoose.Schema.Types.ObjectId, ref: "Purity", required: true }, // Metal purity
-    rate: { type: mongoose.Schema.Types.ObjectId, ref: "Rate", required: true }, // Reference to rates table
+    purity: { type: mongoose.Schema.Types.ObjectId, ref: "Purity", required: null }, // Metal purity
+    rate: { type: mongoose.Schema.Types.ObjectId, ref: "Rate", required: null }, // Reference to rates table
     status: { type: String, enum: ["Show", "Hide"], default: "Show" },
     price: { type: Number, default: 0 }, // Add this field to store the calculated price
     // Reviews & Ratings

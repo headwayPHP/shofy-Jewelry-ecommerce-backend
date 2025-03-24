@@ -1,4 +1,5 @@
 const Rate = require("../model/Rate");
+const mongoose = require("mongoose");
 
 // Create a new rate
 exports.createRate = async (data, file) => {
@@ -56,4 +57,19 @@ exports.deleteRate = async (rateId) => {
         throw new Error("Rate not found");
     }
     return deletedRate;
+};
+
+// Get latest rates for gold, silver, and platinum
+exports.getLatestRates = async () => {
+    const metalTypes = await mongoose.model("MetalType").find();
+    const latestRates = {};
+
+    for (const metalType of metalTypes) {
+        const rate = await Rate.findOne({ metal_type: metalType._id }).sort({ date: -1 });
+        if (rate) {
+            latestRates[metalType.metal_name.toLowerCase()] = rate.rate;
+        }
+    }
+
+    return latestRates;
 };

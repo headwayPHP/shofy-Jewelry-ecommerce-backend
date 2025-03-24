@@ -21,7 +21,10 @@ router.post("/update", rateController.updateRate);
 // ➤ Delete a rate by ID
 router.post("/delete", rateController.deleteRate);
 
+// ➤ Get latest rates for gold, silver, and platinum
+router.get("/latest-rates", rateController.getLatestRates);
+
 // ➤ Update rates and recalculate product prices
-router.post("/update-rates", rateController.updateRatesAndProductPrices);
+router.put("/update-rates", rateController.updateRatesAndProductPrices);
 
 module.exports = router;

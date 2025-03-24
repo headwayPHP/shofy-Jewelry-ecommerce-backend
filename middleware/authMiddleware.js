@@ -1,25 +1,26 @@
 const jwt = require("jsonwebtoken");
 const User = require("../model/Admin.js"); // Adjust the path as needed
 
-// Middleware to verify user authentication
+const { secret } = require("../config/secret");
+
 const protect = async (req, res, next) => {
     let token;
 
     if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
         try {
-            console.log("Authenticated User:", req.user);
+            // Extract the token
+            token = req.headers.authorization.split(" ")[1];
 
-            token = req.headers?.authorization?.split(" ")?.[1];
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            // Verify the token
+            const decoded = jwt.verify(token, secret.token_secret);
 
-            req.user = await User.findById(decoded.id).select("-password"); // Attach user info (excluding password)
-            if (!req.user) {
-                return res.status(401).json({ success: false, message: "User not found" });
-            }
+            // Attach user to the request object
+            req.user = decoded;
 
-            next(); // Proceed to the next middleware
+            // Proceed to the next middleware
+            next();
         } catch (error) {
-            console.log(error);
+            console.error("Token verification error:", error);
             return res.status(401).json({ success: false, message: "Invalid token" });
         }
     } else {
@@ -27,11 +28,12 @@ const protect = async (req, res, next) => {
     }
 };
 
+
 // Middleware to check admin role
 const adminOnly = (req, res, next) => {
-    console.log(req.user);
-    if (req.user && req.user.role === "admin") {
-        next();
+    // Check if the user is authenticated and has the "admin" role
+    if (req.user && req.user.role === "Admin") {
+        next(); // Allow access
     } else {
         return res.status(403).json({ success: false, message: "Access denied. Admins only." });
     }

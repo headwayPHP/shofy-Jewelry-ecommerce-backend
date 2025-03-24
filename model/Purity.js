@@ -6,7 +6,7 @@ const PuritySchema = mongoose.Schema({
         type: Number,
         required: true,
     },
-    // metal_type: { type: mongoose.Schema.Types.ObjectId, ref: "MetalType", required: true },
+    metal_type: { type: mongoose.Schema.Types.ObjectId, ref: "MetalType", required: true },
     status: {
         type: String,
         enum: ['Show', 'Hide'],

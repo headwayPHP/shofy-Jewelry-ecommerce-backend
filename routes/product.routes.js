@@ -19,7 +19,8 @@ const upload = multer({
     storage,
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
     fileFilter: (req, file, cb) => {
-        const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+        const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
+
         if (!allowedTypes.includes(file.mimetype)) {
             return cb(new Error("Only JPEG, PNG, and JPG formats are allowed"));
         }
@@ -29,12 +30,15 @@ const upload = multer({
 
 // 🔹 Product Fetching Routes
 router.get("/all", productController.getAllProducts);
+router.get("/web", productController.getAllProductsWeb);
 router.get("/offer", productController.getOfferTimerProducts);
 router.get("/top-rated", productController.getTopRatedProducts);
 router.get("/review-product/:productId", productController.reviewProducts);
 router.get("/popular", productController.getPopularProductByType);
-router.get("/related-product", productController.getRelatedProducts);
+// router.get("/related-product", productController.getRelatedProducts);
+router.get("/related-product/:id", productController.getRelatedProducts);
 router.get("/show/:id", productController.getSingleProduct);
+router.get("/web/:id", productController.getSingleWebProduct);
 router.get("/stock-out", productController.stockOutProducts);
 // router.get("/", productController.getProductsByType);
 
