@@ -13,19 +13,14 @@ exports.createProductService = async (productData) => {
     // Validate required fields
     const requiredFields = [
       "about_this_item",
-      // "additional_info",
       "product_name",
       "category",
       "metal_type",
-      // "color", // Ensure color is provided
       "gender",
-      // "size",
       "width",
       "height",
       "weight",
-      // "jewellery_type",
       "making_charges_per_gm",
-      // "purity",
       "product_images",
     ];
 
@@ -35,40 +30,19 @@ exports.createProductService = async (productData) => {
       }
     }
 
-    // // Validate and convert color field
-    // if (productData.color && Array.isArray(productData.color)) {
-    //   const colorIds = [];
-    //   for (const colorId of productData.color) {
-    //     // Check if the colorId is a valid ObjectId
-    //     if (!mongoose.Types.ObjectId.isValid(colorId)) {
-    //       throw new Error(`Invalid color ID: ${colorId}`);
-    //     }
+    // If price wasn't provided, fetch the latest rate
+    if (productData.price === undefined || productData.price === null) {
+      const latestRate = await Rate.findOne({
+        metal_type: productData.metal_type,
+      }).sort({ date: -1 });
 
-    //     // Check if the color exists in the Color collection
-    //     const color = await Color.findById(colorId);
-    //     if (!color) {
-    //       throw new Error(`Invalid color: ${colorId}`);
-    //     }
-
-    //     colorIds.push(color._id); // Add the valid ObjectId to the array
-    //   }
-    //   productData.color = colorIds; // Replace the color field with the array of ObjectIds
-    // } else {
-    //   throw new Error("Color field must be an array");
-    // }
-
-    // Fetch the latest rate based on metal_type and purity
-    const latestRate = await Rate.findOne({
-      metal_type: productData.metal_type,
-      // purity: productData.purity ?? { $exists: false }, // Check if purity is provided, otherwise ignore
-    }).sort({ date: -1 }); // Sort by date in descending order to get the latest rate
-
-    if (!latestRate) {
-      throw new Error("No rate found for the given metal type and purity");
+      if (!latestRate) {
+        throw new Error("No rate found for the given metal type");
+      }
+      productData.rate = latestRate._id;
     }
 
-    // Assign the fetched rate to the product
-    productData.rate = latestRate._id;
+    // Normalize product images paths
     if (productData.product_images && Array.isArray(productData.product_images)) {
       productData.product_images = productData.product_images.map(imgPath =>
         path.posix.normalize(imgPath.replace(/\\/g, "/"))
@@ -77,11 +51,11 @@ exports.createProductService = async (productData) => {
 
     // Create the product
     const product = new Product(productData);
-    await product.save(); // The price will be calculated and saved automatically by the pre-save middleware
+    await product.save();
 
-    return product; // Return the saved product with the calculated price
+    return product;
   } catch (error) {
-    throw error; // Throw the error to be handled by the caller
+    throw error;
   }
 };
 
@@ -125,6 +99,7 @@ exports.createProductService = async (productData) => {
 
 exports.getAllProductsService = async () => {
   const products = await Product.find({})
+    .sort({ createdAt: -1 })
     .populate("rate", "rate_value")
     .populate("reviews")
     .populate("promo_type")
@@ -145,6 +120,7 @@ exports.getAllProductsService = async () => {
 };
 exports.getWebProductsService = async () => {
   const products = await Product.find({})
+    .sort({ createdAt: -1 })
     .populate("rate", "rate_value")
     .populate("reviews")
     .populate("promo_type")
@@ -175,6 +151,7 @@ exports.getWebProductsService = async () => {
 // Get product by ID
 exports.getProductService = async (id) => {
   const product = await Product.findById(id)
+    .sort({ createdAt: -1 })
     .populate({
       path: "reviews",
       populate: { path: "userId", select: "name email imageURL" },
@@ -200,12 +177,19 @@ exports.getProductService = async (id) => {
 };
 exports.getWebProductService = async (id) => {
   const product = await Product.findById(id)
+    .sort({ createdAt: -1 })
     .populate({
       path: "reviews",
       populate: { path: "userId", select: "name email" }, // Removed imageURL as it's not in the sample data
     })
     // .populate("brand") // Added brand population
     .populate("category") // Kept category population
+    .populate("reviews")
+    .populate("rate")
+    .populate("promo_type")
+    .populate("category") // Select only category_name
+    .populate("metal_type") // Select only metal_name
+    .populate("purity") // Select only purity_value
     .exec();
 
   if (!product) {
@@ -247,6 +231,7 @@ exports.getRelatedProductService = async (productId) => {
       _id: { $ne: productId }
     })
       // .populate('brand', 'name _id')
+      .sort({ createdAt: -1 })
       .populate('category', 'name _id')
       .select('-__v -createdAt -updatedAt')
       .limit(4)
@@ -262,6 +247,7 @@ exports.getRelatedProductService = async (productId) => {
 // Get products by category
 exports.getProductsByCategoryService = async (categoryId) => {
   const products = await Product.find({ category: categoryId })
+    .sort({ createdAt: -1 })
     .populate("rate")
     .populate("reviews")
     .populate("promo_type")
@@ -283,6 +269,7 @@ exports.getProductsByCategoryService = async (categoryId) => {
 // Get top-rated products
 exports.getTopRatedProductService = async () => {
   const products = await Product.find({ averageRating: { $gt: 0 } })
+    .sort({ createdAt: -1 })
     .sort({ averageRating: -1 })
     .populate("rate")
     .populate("reviews")
@@ -347,6 +334,7 @@ exports.updateProductService = async (id, updatedData, files) => {
       new: true,
       runValidators: true,
     })
+      .sort({ createdAt: -1 })
       .populate("rate")
       .populate("reviews")
       .populate("category")

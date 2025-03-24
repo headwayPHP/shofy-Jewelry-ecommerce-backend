@@ -20,7 +20,7 @@ exports.createRate = async (data, file) => {
 
 // Get all rates
 exports.getAllRates = async () => {
-    return await Rate.find();
+    return await Rate.find().sort({ createdAt: -1 });
 };
 
 // Get a single rate by ID

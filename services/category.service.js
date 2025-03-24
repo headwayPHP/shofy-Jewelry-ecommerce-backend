@@ -27,13 +27,14 @@ exports.addAllCategoryService = async (data) => {
 
 // get all show category service
 exports.getShowCategoryServices = async () => {
-  const category = await Category.find({ status: 'Show' }).populate('products');
+  const category = await Category.find({ status: 'Show' }).sort({ createdAt: -1 }).populate('products');
   return category;
 }
 
 // get all category 
 exports.getAllCategoryServices = async () => {
   const category = await Category.find({})
+    .sort({ createdAt: -1 })
   return category;
 }
 

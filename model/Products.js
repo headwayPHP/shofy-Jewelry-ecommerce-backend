@@ -128,9 +128,27 @@ productSchema.methods.getFinalPrice = async function () {
  */
 productSchema.pre("save", async function (next) {
   try {
+    // Skip calculation if price was explicitly set (even if set to 0)
+    if (this.price !== undefined && this.price !== null && this.price !== 0) {
+      return next();
+    }
+    // Ensure we have the required rate
+    if (!this.rate) {
+      const Rate = mongoose.model("Rate");
+      const latestRate = await Rate.findOne({
+        metal_type: this.metal_type,
+      }).sort({ date: -1 });
+
+      if (!latestRate) {
+        throw new Error("No rate found for the given metal type");
+      }
+      this.rate = latestRate._id;
+    }
+
     // Calculate the final price
     const finalPrice = await this.getFinalPrice();
-    this.price = finalPrice || 0; // Store the calculated price in the price field
+    this.price = finalPrice || 0;
+
     next();
   } catch (error) {
     console.error("Error calculating price during save:", error);
@@ -150,17 +168,24 @@ productSchema.pre("findOneAndUpdate", async function (next) {
       return next(new Error("Product not found"));
     }
 
-    // Recalculate the price if relevant fields are updated
-    if (
+    // Skip if price is being explicitly set
+    if (update.price !== undefined && update.price !== null) {
+      return next();
+    }
+
+    // Recalculate if relevant fields are modified
+    const shouldRecalculate = (
       update.weight ||
       update.rate ||
       update.making_charges_per_gm ||
       update.making_type ||
       update.discount_type ||
       update.discount
-    ) {
+    );
+
+    if (shouldRecalculate) {
       const finalPrice = await product.getFinalPrice();
-      update.price = finalPrice || 0; // Update the price field
+      this.setUpdate({ ...update, price: finalPrice || 0 });
     }
 
     next();

@@ -7,6 +7,7 @@ const User = require("../model/User.js");
 
 exports.getAllReviewsService = async () => {
     const reviews = await Review.find()
+        .sort({ createdAt: -1 })
         .populate("userId") // Populates user details
         .populate("productId"); // Populates product details
 
@@ -61,7 +62,7 @@ exports.addReviewService = async ({ userId, productId, rating, comment }) => {
 
 // Get all reviews for a specific product
 exports.getReviewsByProductService = async (productId) => {
-    const reviews = await Review.find({ productId }).populate("userId", "firstName lastName profilePhoto");
+    const reviews = await Review.find({ productId }).sort({ createdAt: -1 }).populate("userId", "firstName lastName profilePhoto");
 
     if (!reviews.length) {
         throw new Error("No reviews found for this product.");

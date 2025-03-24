@@ -27,13 +27,13 @@ exports.addAllContactusService = async (data) => {
 
 // get all show contactusservice
 exports.getShowContactusServices = async () => {
-    const contactus = await Contactus.find({ status: 'Show' }).populate('products');
+    const contactus = await Contactus.find({ status: 'Show' }).sort({ createdAt: -1 }).populate('products');
     return contactus;
 }
 
 // get all contactus
 exports.getAllContactusServices = async () => {
-    const contactus = await Contactus.find({})
+    const contactus = await Contactus.find({}).sort({ createdAt: -1 })
     return contactus;
 }
 

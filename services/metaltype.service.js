@@ -23,7 +23,7 @@ exports.getShowMetalTypeServices = async () => {
 
 // get all metaltype 
 exports.getAllMetalTypeServices = async () => {
-    const metaltype = await MetalType.find({})
+    const metaltype = await MetalType.find({}).sort({ createdAt: -1 })
     return metaltype;
 }
 
