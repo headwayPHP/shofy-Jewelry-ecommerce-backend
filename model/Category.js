@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Schema.Types;
 
-const CategorySchema = mongoose.Schema({
+const CategorySchema = new mongoose.Schema({
   category_name: {
     type: String,
     required: true,
@@ -16,9 +16,13 @@ const CategorySchema = mongoose.Schema({
     enum: ['Show', 'Hide'],
     default: 'Show',
   },
+  products: [{
+    type: ObjectId,
+    ref: 'Product'
+  }]
 }, {
   timestamps: true
-})
+});
 
-const Category = mongoose.model('Category', CategorySchema);
-module.exports = Category;
+// Make sure this is properly exported
+module.exports = mongoose.model('Category', CategorySchema);

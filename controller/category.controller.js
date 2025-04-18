@@ -185,27 +185,96 @@ exports.getAllCategory = async (req, res, next) => {
         next(error);
     }
 };
-
-// Get product type categories
-exports.getProductTypeCategory = async (req, res, next) => {
+// Controller method
+// Controller method
+exports.getWebCategory = async (req, res, next) => {
     try {
-        const categories = await categoryServices.getCategoryTypeService(req.params.type);
+        const categories = await categoryServices.getWebCategoryServices();
 
+        // Format image URLs with ADMIN_URL if needed
         const formattedCategories = categories.map(category => ({
-            ...category.toObject(),
-            category_image: category.category_image
-                ? `${process.env.ADMIN_URL}${category.category_image}`
-                : null,
+            ...category,
+            img: category.img ? `${process.env.ADMIN_URL}${category.img}` : null,
+            products: category.products.map(product => ({
+                ...product,
+                img: product.img ? `${process.env.ADMIN_URL}${product.img}` : null
+            }))
         }));
 
         res.status(200).json({
             success: true,
-            result: formattedCategories,
+            result: formattedCategories
         });
     } catch (error) {
         next(error);
     }
 };
+
+// Get product type categories
+// exports.getProductTypeCategory = async (req, res, next) => {
+//     try {
+//         const { category, products } = await categoryServices.getCategoryTypeService(req.params.type);
+
+//         const formattedResponse = {
+//             category: {
+//                 ...category.toObject(),
+//                 category_image: category.category_image
+//                     ? `${process.env.ADMIN_URL}${category.category_image}`
+//                     : null,
+//             },
+//             products: products.map(product => ({
+//                 ...product.toObject(),
+//                 // Add any product image formatting here if needed
+//             }))
+//         };
+
+//         res.status(200).json({
+//             success: true,
+//             result: formattedResponse,
+//         });
+//     } catch (error) {
+//         next(error);
+//     }
+// };
+
+exports.getProductTypeCategory = async (req, res, next) => {
+    try {
+        const categoryName = req.query.category; // Extract category from query params
+
+        if (!categoryName) {
+            return res.status(400).json({
+                success: false,
+                message: "Category parameter is required",
+            });
+        }
+
+        const { category, products } = await categoryServices.getCategoryTypeService(categoryName);
+
+        const formattedResponse = {
+            category: {
+                ...category.toObject(),
+                category_image: category.category_image
+                    ? `${process.env.ADMIN_URL}${category.category_image}`
+                    : null,
+            },
+            products: products.map(product => ({
+                ...product.toObject(),
+                product_images: product.product_images.map(image =>
+                    `${process.env.ADMIN_URL}${image}` // Adding full URL
+                ),
+                // Add any product image formatting here if needed
+            })),
+        };
+
+        res.status(200).json({
+            success: true,
+            result: formattedResponse,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 
 // Delete category
 exports.deleteCategory = async (req, res, next) => {

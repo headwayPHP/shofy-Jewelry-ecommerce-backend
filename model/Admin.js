@@ -56,6 +56,17 @@ const adminSchema = new mongoose.Schema(
         "CEO",
       ],
     },
+    tokens: [{
+      token: {
+        type: String,
+        required: true
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+        expires: '30d' // tokens expire after 30 days
+      }
+    }],
     joiningDate: {
       type: Date,
       required: false,
@@ -64,7 +75,7 @@ const adminSchema = new mongoose.Schema(
     confirmationTokenExpires: Date,
   },
   {
-    timestamps: true, 
+    timestamps: true,
   }
 );
 

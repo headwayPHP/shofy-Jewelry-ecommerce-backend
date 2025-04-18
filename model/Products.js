@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 // color: [{ type: mongoose.Schema.Types.ObjectId, ref: "Color", required: true }],
@@ -10,13 +11,13 @@ const productSchema = new mongoose.Schema(
     metal_type: { type: mongoose.Schema.Types.ObjectId, ref: "MetalType", required: true },
     gender: { type: String, required: true },
     size: { type: String, required: null },
-    width: { type: Number, required: true }, // Width in mm
-    height: { type: Number, required: true }, // Height in mm
+    width: { type: Number, required: false }, // Width in mm
+    height: { type: Number, required: false }, // Height in mm
     weight: { type: Number, required: true }, // Weight in grams
     quantity: { type: Number, required: false }, // Quantity of the product
     promo_type: { type: mongoose.Schema.Types.ObjectId, ref: "PromoType", required: false },
     jewellery_type: { type: String, required: null },
-    making_charges_per_gm: { type: Number, required: true }, // Making charges per gram
+    making_charges_per_gm: { type: Number, required: false }, // Making charges per gram
     making_type: { type: String, enum: ["percentage", "flat"], default: "flat" }, // Making charge type
     design_code: { type: String },
     product_images: [{ type: String, required: true }],
@@ -50,7 +51,7 @@ productSchema.methods.getPerGramPrice = async function () {
     return 0;
   }
 
-  console.log("Rate Data:", rateData); // Debugging
+  // await console.log("Rate Data:", rateData); // Debugging
   return rateData.rate || 0;
 };;
 
@@ -70,11 +71,17 @@ productSchema.methods.getMaterialCost = async function () {
  */
 productSchema.methods.getMakingCharges = async function () {
   const materialCost = await this.getMaterialCost();
+  // if (this.making_type === "percentage") {
+  //   return (materialCost * this.making_charges_per_gm);
+  // } else {
+  //   return this.making_charges_per_gm * this.weight;
+  // }
   if (this.making_type === "percentage") {
-    return (materialCost * this.making_charges_per_gm) / 100;
-  } else {
-    return this.making_charges_per_gm * this.weight;
+    return (materialCost * this.making_charges_per_gm) / 100; // Assuming making_charges_per_gm is a percentage
+  } else if (this.making_type === "flat") {
+    return this.making_charges_per_gm * this.weight; // Flat rate
   }
+  return this.making_charges_per_gm * materialCost;
 };
 
 /**
@@ -97,16 +104,46 @@ productSchema.methods.getDiscountedMakingCharges = async function () {
 };
 
 /**
+ * Gets the effective rate per gram based on metal type and purity
+ */
+
+/**
+ * Calculates the effective rate considering purity for gold
+ */
+productSchema.methods.getEffectiveRate = async function () {
+  await this.populate('rate metal_type purity');
+
+  if (!this.rate) {
+    throw new Error("Rate not set for product");
+  }
+
+  // For non-gold products, use rate as-is
+  if (this.metal_type.metal_name.toLowerCase() !== 'gold') {
+    return this.rate.rate;
+  }
+
+  // For gold, adjust based on purity
+  if (!this.purity) {
+    throw new Error("Purity not set for gold product");
+  }
+
+  const purityFactor = this.purity.product_purity / 24;
+  return this.rate.rate * purityFactor;
+};
+
+
+
+
+
+
+/**
  * **Method to calculate final price after tax**
  * Formula: finalPrice = materialCost + discountedMakingCharges + (3% of materialCost) + (5% of discountedMakingCharges)
  */
 productSchema.methods.getFinalPrice = async function () {
   try {
     const materialCost = await this.getMaterialCost();
-    console.log("Material Cost:", materialCost); // Debugging
-
     const discountedMakingCharges = await this.getDiscountedMakingCharges();
-    console.log("Discounted Making Charges:", discountedMakingCharges); // Debugging
 
     // Tax calculation
     const taxOnMaterial = materialCost * 0.03; // 3% tax on material cost
@@ -114,22 +151,22 @@ productSchema.methods.getFinalPrice = async function () {
 
     // Final price
     const finalPrice = materialCost + discountedMakingCharges + taxOnMaterial + taxOnMakingCharges;
-    console.log("Final Price:", finalPrice); // Debugging
 
     return finalPrice;
   } catch (error) {
     console.error("Error calculating final price:", error);
     return null; // Return null if there's an error
   }
-};;
+};
 
 /**
  * **Middleware to calculate and save the price before saving the product**
- */
+*/
 productSchema.pre("save", async function (next) {
   try {
     // Skip calculation if price was explicitly set (even if set to 0)
-    if (this.price !== undefined && this.price !== null && this.price !== 0) {
+    if (!this.forcePriceCalculation && this.price !== undefined && this.price !== null && this.price !== 0) {
+      console.log("here in pre save"); // Debugging
       return next();
     }
     // Ensure we have the required rate
@@ -155,6 +192,8 @@ productSchema.pre("save", async function (next) {
     next(error);
   }
 });
+
+
 
 /**
  * **Middleware to calculate and save the price before updating the product**

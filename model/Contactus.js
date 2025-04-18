@@ -16,7 +16,7 @@ const ContactusSchema = mongoose.Schema({
     },
     mobile: {
         type: String,
-        required: true,
+        required: false,
     },
     contact_status: {
         type: String,

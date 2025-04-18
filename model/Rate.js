@@ -3,7 +3,11 @@ const mongoose = require("mongoose");
 const rateSchema = new mongoose.Schema({
     date: { type: Date, required: true, default: Date.now }, // Date of the rate
     metal_type: { type: mongoose.Schema.Types.ObjectId, ref: "MetalType", required: true }, // Reference to metal type
-    purity: { type: mongoose.Schema.Types.ObjectId, ref: "Purity", required: true }, // Reference to purity
+    purity: {
+        type: mongoose.Schema.Types.ObjectId, ref: "Purity", required: function () {
+            return this.metal_type.metal_name.toLowerCase() === 'gold';
+        }
+    }, // Reference to purity
     rate: { type: Number, required: true }, // Rate per gram
 }, { timestamps: true });
 
@@ -47,7 +51,8 @@ rateSchema.statics.updateRatesAndProductPrices = async function (rates) {
 
     // Recalculate prices for all products
     const products = await mongoose.model("Product").find();
-    for (const product of products) {
+    for (const product of products) { // Debugging
+        product.forcePriceCalculation = true;
         await product.save(); // This will trigger the pre-save middleware to recalculate the price
     }
 
@@ -56,3 +61,4 @@ rateSchema.statics.updateRatesAndProductPrices = async function (rates) {
 
 const Rate = mongoose.model("Rate", rateSchema);
 module.exports = Rate;
+

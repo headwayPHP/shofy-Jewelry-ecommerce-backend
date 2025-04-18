@@ -27,9 +27,19 @@ const upload = multer({
         cb(null, true);
     },
 });
+const categoryController = require('../controller/category.controller');
+
+// Call the categoryController function when querying by category
+router.get('/', categoryController.getProductTypeCategory);
 
 // 🔹 Product Fetching Routes
 router.get("/all", productController.getAllProducts);
+
+// Add these to your product routes
+router.get('/search', productController.searchProducts);
+router.get('/web/search', productController.searchWebProducts);
+
+
 router.get("/web", productController.getAllProductsWeb);
 router.get("/offer", productController.getOfferTimerProducts);
 router.get("/top-rated", productController.getTopRatedProducts);
@@ -43,9 +53,9 @@ router.get("/stock-out", productController.stockOutProducts);
 // router.get("/", productController.getProductsByType);
 
 // 🔹 Product Modification Routes
-router.post("/add", upload.array("product_images", 5), productController.addProduct);
-router.post("/add-all", productController.addAllProducts);
+router.post("/add", protect, adminOnly, upload.array("product_images", 5), productController.addProduct);
+router.post("/add-all", protect, adminOnly, productController.addAllProducts);
 router.put("/edit/:id", upload.array("product_images", 5), productController.updateProduct);
-router.delete("/delete/:id", productController.deleteProduct); // Use route parameter instead of body
+router.delete("/delete/:id", protect, adminOnly, productController.deleteProduct); // Use route parameter instead of body
 
 module.exports = router;

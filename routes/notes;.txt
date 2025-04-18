@@ -3,3 +3,35 @@ notes;
 Admin panel:
 images in categories and products
     
+
+
+
+
+    Dashboard Design Content for Jewellery E-commerce Admin Panel
+
+
+
+Total Products no.
+
+Total Enquiries no.
+
+Today Enquiries no.
+
+Total Customers no.
+
+
+
+
+
+Last 10 Added Products
+
+
+
+Recent Orders —> Recent Enquiries
+Today’s Reviews
+
+
+
+
+
+Profile info(from user's data)

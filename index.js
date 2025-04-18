@@ -12,6 +12,8 @@ const globalErrorHandler = require("./middleware/global-error-handler");
 // routes
 const userRoutes = require("./routes/user.routes");
 const categoryRoutes = require("./routes/category.routes");
+const dashboardRoutes = require("./routes/dashboard.routes");
+const bannerRoutes = require("./routes/banner.routes");
 const contactusRoutes = require("./routes/contactus.routes");
 const promotypeRoutes = require("./routes/promotype.routes");
 const colorRoutes = require("./routes/color.routes");
@@ -47,6 +49,8 @@ connectDB();
 
 app.use("/api/user", userRoutes);
 app.use("/api/category", categoryRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/banner", bannerRoutes);
 app.use("/api/contactus", contactusRoutes);
 app.use("/api/contactus", contactusRoutes);
 app.use("/api/promotype", promotypeRoutes);

@@ -106,14 +106,14 @@ exports.getAllProductsWeb = async (req, res, next) => {
     const result = await productServices.getWebProductsService();
 
     // Modify the `img` field to include the full URL
-    const updatedResult = result.map((product) => ({
-      ...product,
-      img: product.img ? `${baseUrl}${product.img}` : null, // Add base URL to the image path
-    }));
+    // const updatedResult = result.map((product) => ({
+    //   ...product,
+    //   product_images: product.product_images ? `${baseUrl}${product.product_images}` : null, // Add base URL to the image path
+    // }));
 
     res.status(200).json({
       success: true,
-      data: updatedResult,
+      data: result,
     });
   } catch (error) {
     next(error);
@@ -287,6 +287,53 @@ exports.deleteProduct = async (req, res, next) => {
     await productServices.deleteProduct(req.params.id);
     res.status(200).json({
       message: "Product deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+// Search products
+exports.searchProducts = async (req, res, next) => {
+  try {
+    const { searchText } = req.query;
+
+    if (!searchText) {
+      return res.status(400).json({
+        success: false,
+        message: "Search searchText is required"
+      });
+    }
+
+    const results = await productServices.searchProductsService(searchText);
+
+    res.status(200).json({
+      success: true,
+      data: results
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Web version of search
+exports.searchWebProducts = async (req, res, next) => {
+  try {
+    const { searchText } = req.query;
+
+    if (!searchText) {
+      return res.status(400).json({
+        success: false,
+        message: "Search searchText is required"
+      });
+    }
+
+    const results = await productServices.searchWebProductsService(searchText);
+
+    res.status(200).json({
+      success: true,
+      data: results
     });
   } catch (error) {
     next(error);

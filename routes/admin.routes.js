@@ -1,6 +1,32 @@
 const express = require("express");
 const router = express.Router();
 const { body } = require("express-validator")
+// const { logoutAdmin } = require("../config/auth");
+const { isAuth } = require("../middleware/authMiddleware");
+const bcrypt = require("bcryptjs");
+
+const fs = require('fs');
+const path = require('path');
+const multer = require('multer');
+
+const uploadDir = path.join(__dirname, '../public/images');
+
+// Ensure the directory exists
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
+const upload = multer({ storage });
+
 
 const {
   registerAdmin,
@@ -9,8 +35,11 @@ const {
   changePassword,
   addStaff,
   getAllStaff,
+  logoutAdmin,
   deleteStaff,
   getStaffById,
+  getAdminProfile,
+  updateAdminProfile,
   forgetPassword,
   confirmAdminEmail,
   confirmAdminForgetPass,
@@ -32,6 +61,9 @@ router.post('/login', [
 
 //login a admin
 router.patch("/change-password", changePassword);
+
+
+router.post("/logout", logoutAdmin);
 
 //login a admin
 router.post("/add", addStaff);
@@ -56,6 +88,11 @@ router.patch("/update-stuff/:id", updateStaff);
 
 //delete a staff
 router.delete("/:id", deleteStaff);
+
+// Routes
+router.get('/profile/:id', getAdminProfile);
+router.put('/profile/:id', upload.single('image'), updateAdminProfile);
+
 
 // routeer.get("/admin", getAdmin);
 

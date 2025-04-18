@@ -20,6 +20,14 @@ const signInToken = (user) => {
   );
 };
 
+// Add this new function
+const invalidateToken = async (user, token) => {
+  // Remove the token from the user's tokens array
+  user.tokens = user.tokens.filter(t => t.token !== token);
+  await user.save();
+};
+
+
 const tokenForVerify = (user) => {
   return jwt.sign(
     {
@@ -47,6 +55,8 @@ const isAuth = async (req, res, next) => {
   }
 };
 
+
+
 const isAdmin = async (req, res, next) => {
   const admin = await Admin.findOne({ role: "Admin" });
   if (admin) {
@@ -62,5 +72,6 @@ module.exports = {
   signInToken,
   tokenForVerify,
   isAuth,
+  invalidateToken,
   isAdmin,
 };

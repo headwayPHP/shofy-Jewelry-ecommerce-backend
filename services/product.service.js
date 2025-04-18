@@ -17,10 +17,10 @@ exports.createProductService = async (productData) => {
       "category",
       "metal_type",
       "gender",
-      "width",
-      "height",
+      // "width",
+      // "height",
       "weight",
-      "making_charges_per_gm",
+      // "making_charges_per_gm",
       "product_images",
     ];
 
@@ -34,12 +34,20 @@ exports.createProductService = async (productData) => {
     if (productData.price === undefined || productData.price === null) {
       const latestRate = await Rate.findOne({
         metal_type: productData.metal_type,
-      }).sort({ date: -1 });
-
+      }).populate('purity').sort({ date: -1 });
+      productData.purity = latestRate.purity
       if (!latestRate) {
         throw new Error("No rate found for the given metal type");
       }
       productData.rate = latestRate._id;
+
+      // For gold products, purity is mandatory
+      if (latestRate.metal_type.metal_name.toLowerCase() === 'gold') {
+        if (!latestRate.purity) {
+          throw new Error("Gold rate must have associated purity");
+        }
+        productData.purity = latestRate.purity._id; // Set purity reference
+      }
     }
 
     // Normalize product images paths
@@ -102,6 +110,12 @@ exports.getAllProductsService = async () => {
     .sort({ createdAt: -1 })
     .populate("rate", "rate_value")
     .populate("reviews")
+    .populate({
+      path: "reviews",
+      populate: {
+        path: "userId", // Assuming 'user_id' is a reference to the Users collection
+      },
+    })
     .populate("promo_type")
     .populate("category", "category_name") // Select only category_name
     .populate("metal_type", "metal_name") // Select only metal_name
@@ -123,6 +137,12 @@ exports.getWebProductsService = async () => {
     .sort({ createdAt: -1 })
     .populate("rate", "rate_value")
     .populate("reviews")
+    .populate({
+      path: "reviews",
+      populate: {
+        path: "userId", // Assuming 'user_id' is a reference to the Users collection
+      },
+    })
     .populate("promo_type")
     .populate("category", "category_name") // Select only category_name
     .populate("metal_type", "metal_name") // Select only metal_name
@@ -132,11 +152,16 @@ exports.getWebProductsService = async () => {
   const formattedProducts = products.map((product) => {
     const firstImage = product.product_images.length > 0 ? product.product_images[0] : null;
 
+    // product_images: product.product_images,
+    // product_images: product.product_images,
     return {
       _id: product._id,
-      img: firstImage,
+      product_images: product.product_images.map(
+        (img) => `${process.env.ADMIN_URL}${img}`
+      ),
       category: product.category ? product.category.category_name : null,
-      title: product.product_name,
+      product_name: product.product_name,
+      about_this_item: product.about_this_item,
       reviews: product.reviews,
       price: product.price,
       discount: product.discount,
@@ -158,6 +183,12 @@ exports.getProductService = async (id) => {
     })
     .populate("rate")
     .populate("reviews")
+    .populate({
+      path: "reviews",
+      populate: {
+        path: "userId", // Assuming 'user_id' is a reference to the Users collection
+      },
+    })
     .populate("promo_type")
     .populate("category")
     .populate("metal_type")
@@ -185,6 +216,12 @@ exports.getWebProductService = async (id) => {
     // .populate("brand") // Added brand population
     .populate("category") // Kept category population
     .populate("reviews")
+    .populate({
+      path: "reviews",
+      populate: {
+        path: "userId", // Assuming 'user_id' is a reference to the Users collection
+      },
+    })
     .populate("rate")
     .populate("promo_type")
     .populate("category") // Select only category_name
@@ -363,4 +400,106 @@ exports.updateProductService = async (id, updatedData, files) => {
 // Delete product
 exports.deleteProduct = async (id) => {
   return await Product.findByIdAndDelete(id);
+};
+
+
+
+// Search products by searchText (case-insensitive)
+exports.searchProductsService = async (searchText) => {
+  try {
+    if (!searchText || searchText.trim() === '') {
+      return []; // Return empty array if no search term provided
+    }
+
+    // Create a case-insensitive regex for searching
+    const searchRegex = new RegExp(searchText, 'i');
+
+    const products = await Product.find({
+      $or: [
+        { product_name: { $regex: searchRegex } },
+        { additional_info: { $regex: searchRegex } },
+        { about_this_item: { $regex: searchRegex } }
+      ]
+    })
+      .sort({ createdAt: -1 })
+      .populate("rate", "rate_value")
+      .populate("reviews")
+      .populate({
+        path: "reviews",
+        populate: {
+          path: "userId",
+        },
+      })
+      .populate("promo_type")
+      .populate("category", "category_name")
+      .populate("metal_type", "metal_name")
+      .populate("purity", "purity_value")
+      .exec();
+
+    return products.map((product) => ({
+      ...product.toObject(),
+      price: product.price,
+      averageRating: product.averageRating,
+      product_images: product.product_images.map(
+        (img) => `${process.env.ADMIN_URL}${img}`
+      ),
+    }));
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Web version of search with simplified response
+exports.searchWebProductsService = async (searchText) => {
+  try {
+    if (!searchText || searchText.trim() === '') {
+      return []; // Return empty array if no search term provided
+    }
+
+    // Create a case-insensitive regex for searching
+    const searchRegex = new RegExp(searchText, 'i');
+
+    const products = await Product.find({
+      $or: [
+        { product_name: { $regex: searchRegex } },
+        { additional_info: { $regex: searchRegex } },
+        { about_this_item: { $regex: searchRegex } }
+      ]
+    })
+      .sort({ createdAt: -1 })
+      .populate("rate", "rate_value")
+      .populate("reviews")
+      .populate({
+        path: "reviews",
+        populate: {
+          path: "userId",
+        },
+      })
+      .populate("promo_type")
+      .populate("category", "category_name")
+      .populate("metal_type", "metal_name")
+      .populate("purity", "purity_value")
+      .exec();
+
+    return products.map((product) => {
+      const firstImage = product.product_images.length > 0 ? product.product_images[0] : null;
+
+      return {
+        _id: product._id,
+        product_images: product.product_images.map(
+          (img) => `${process.env.ADMIN_URL}${img}`
+        ),
+        category: product.category ? product.category.category_name : null,
+        product_name: product.product_name,
+        about_this_item: product.about_this_item,
+        reviews: product.reviews,
+        price: product.price,
+        discount: product.discount,
+        tags: [product.metal_type ? product.metal_type.metal_name : null, product.purity ? product.purity.purity_value : null].filter(Boolean),
+        status: product.status,
+      };
+    });
+  } catch (error) {
+    throw error;
+  }
 };

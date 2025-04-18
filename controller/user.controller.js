@@ -40,7 +40,7 @@ exports.signup = async (req, res, next) => {
            `,
       };
       const message = "Please check your email to verify!";
-      sendEmail(mailData, res, message);
+      // sendEmail(mailData, res, message);
       res.status(200).json({
         status: "success",
         message: "User creation request successfull.",
@@ -272,44 +272,84 @@ exports.confirmEmail = async (req, res, next) => {
 exports.forgetPassword = async (req, res, next) => {
   try {
     const { verifyEmail } = req.body;
+    console.log("Received password reset request for:", verifyEmail);
+
     const user = await User.findOne({ email: verifyEmail });
+
     if (!user) {
-      return res.status(404).send({
-        message: "User Not found with this email!",
+      return res.status(200).json({
+        message: "If this email exists, a reset link has been sent"
       });
-    } else {
-      const token = tokenForVerify(user);
-      const body = {
-        from: secret.email_user,
-        to: `${verifyEmail}`,
-        subject: "Password Reset",
-        html: `<h2>Hello ${verifyEmail}</h2>
-        <p>A request has been received to change the password for your <strong>Shofy</strong> account </p>
-
-        <p>This link will expire in <strong> 10 minute</strong>.</p>
-
-        <p style="margin-bottom:20px;">Click this link for reset your password</p>
-
-        <a href=${secret.client_url}/forget-password/${token} style="background:#0989FF;color:white;border:1px solid #0989FF; padding: 10px 15px; border-radius: 4px; text-decoration:none;">Reset Password</a>
-
-        <p style="margin-top: 35px;">If you did not initiate this request, please contact us immediately at support@shofy.com</p>
-
-        <p style="margin-bottom:0px;">Thank you</p>
-        <strong>Shofy Team</strong>
-        `,
-      };
-      user.confirmationToken = token;
-      const date = new Date();
-      date.setDate(date.getDate() + 1);
-      user.confirmationTokenExpires = date;
-      await user.save({ validateBeforeSave: false });
-      const message = "Please check your email to reset password!";
-      sendEmail(body, res, message);
     }
+
+    // Generate token & expiration time (10 minutes)
+    const token = tokenForVerify(user);
+    const resetLink = `${secret.client_url}/forget-password/${encodeURIComponent(token)}`;
+
+    user.confirmationToken = token;
+    user.confirmationTokenExpires = new Date(Date.now() + 10 * 60 * 1000);
+    await user.save({ validateBeforeSave: false });
+
+    // Email content
+    const emailHtml = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Password Reset</title>
+        <style>
+            body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+            .container { max-width: 600px; background: #fff; padding: 20px; margin: auto; border-radius: 5px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); }
+            .header { font-size: 22px; font-weight: bold; color: #0989FF; text-align: center; }
+            .content { font-size: 16px; color: #333; text-align: center; }
+            .button {
+                display: inline-block; padding: 12px 20px; background: #0989FF; color: #fff; 
+                text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 20px;
+            }
+            .footer { font-size: 12px; color: #777; margin-top: 20px; text-align: center; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">Password Reset Request</div>
+            <div class="content">
+                <p>Hello,</p>
+                <p>We received a request to reset your password. Click the button below to proceed:</p>
+                <p><a href="${resetLink}" class="button">Reset Password</a></p>
+                <p><strong>This link expires in 10 minutes.</strong></p>
+                <p>If you didn’t request this, please ignore this email.</p>
+            </div>
+            <div class="footer">
+                <p>If the button doesn’t work, use this link:</p>
+                <p><a href="${resetLink}">${resetLink}</a></p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+
+    // Email body
+    const emailBody = {
+      to: verifyEmail,
+      subject: "Password Reset",
+      html: emailHtml
+    };
+
+    await sendEmail(emailBody.to, emailBody.subject, "text", emailBody.html);
+
+    return res.status(200).json({
+      message: "If this email exists, a reset link has been sent"
+    });
+
   } catch (error) {
-    next(error)
+    console.error("Error in forgetPassword:", error);
+    return res.status(500).json({
+      message: "An error occurred. Please try again later."
+    });
   }
 };
+;
 
 // confirm-forget-password
 exports.confirmForgetPassword = async (req, res, next) => {
@@ -356,29 +396,63 @@ exports.confirmForgetPassword = async (req, res, next) => {
 // change password
 exports.changePassword = async (req, res, next) => {
   try {
-    const { email, password, googleSignIn, newPassword } = req.body || {};
-    const user = await User.findOne({ email: email });
-    // Check if the user exists
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    const { email, token, newPassword, googleSignIn, password } = req.body;
+
+    // Basic validation
+    if (!email || !newPassword || (googleSignIn ? false : !password && !token)) {
+      return res.status(400).json({ message: "Missing required fields" });
     }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: "Password must be at least 8 characters" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "Invalid reset link or user not found" });
+    }
+
     if (googleSignIn) {
-      const hashedPassword = bcrypt.hashSync(newPassword);
-      await User.updateOne({ email: email }, { password: hashedPassword })
+      // Directly update password for Google sign-in users
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      user.password = hashedPassword;
+      await user.save();
       return res.status(200).json({ message: "Password changed successfully" });
     }
-    if (!bcrypt.compareSync(password, user?.password)) {
-      return res.status(401).json({ message: "Incorrect current password" });
+
+    // Token validation (for reset password flow)
+    if (token) {
+      if (!user.confirmationToken ||
+        user.confirmationToken !== token ||
+        new Date() > new Date(user.confirmationTokenExpires)) {
+        return res.status(400).json({ message: "Invalid or expired reset link" });
+      }
+    } else {
+      // Check if the old password is correct (for normal password change)
+      if (!bcrypt.compareSync(password, user.password)) {
+        return res.status(401).json({ message: "Incorrect current password" });
+      }
     }
-    else {
-      const hashedPassword = bcrypt.hashSync(newPassword);
-      await User.updateOne({ email: email }, { password: hashedPassword })
-      res.status(200).json({ message: "Password changed successfully" });
-    }
+
+    // Hash and update password
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    user.password = hashedPassword;
+    user.confirmationToken = undefined;
+    user.confirmationTokenExpires = undefined;
+    await user.save();
+
+    return res.status(200).json({
+      message: "Password changed successfully. You can now log in with your new password."
+    });
+
   } catch (error) {
-    next(error)
+    console.error("Error in changePassword:", error);
+    return res.status(500).json({
+      message: "An error occurred while changing the password."
+    });
   }
 };
+;
 
 // update a profile
 // exports.updateUser = async (req, res, next) => {
