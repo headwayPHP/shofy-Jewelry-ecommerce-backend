@@ -31,7 +31,7 @@ const productSchema = new mongoose.Schema({
     averageRating: { type: Number, default: 0 },
 }, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
 
-// changes
+
 /**
  * **Method to fetch base rate based on metal type**
  */
