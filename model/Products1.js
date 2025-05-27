@@ -105,6 +105,7 @@ productSchema.methods.getDiscountedMakingCharges = async function () {
 /**
  * Calculates the effective rate considering purity for gold
  */
+
 productSchema.methods.getEffectiveRate = async function () {
     await this.populate('rate metal_type purity');
 

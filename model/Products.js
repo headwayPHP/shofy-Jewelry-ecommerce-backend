@@ -1,36 +1,37 @@
 const mongoose = require("mongoose");
 
 const productSchema = new mongoose.Schema({
-    about_this_item: {type: String, required: true},
-    additional_info: {type: String, required: null},
-    product_name: {type: String, required: true},
-    category: {type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true},
-    metal_type: {type: mongoose.Schema.Types.ObjectId, ref: "MetalType", required: true},
-    gender: {type: String, required: true},
-    size: {type: String, required: null},
-    width: {type: Number, required: false},
-    height: {type: Number, required: false},
-    weight: {type: Number, required: true},
-    quantity: {type: Number, required: false},
-    promo_type: {type: mongoose.Schema.Types.ObjectId, ref: "PromoType", required: false},
-    jewellery_type: {type: String, required: null},
-    making_charges_per_gm: {type: Number, required: false},
-    hall_mark_charges: {type: Number, required: false},
-    additional_charges: {type: Number, required: false},
-    making_type: {type: String, enum: ["percentage", "flat"], default: "flat"},
-    design_code: {type: String},
-    product_images: [{type: String, required: true}],
-    discount_type: {type: String, enum: ["none", "flat", "percentage"], default: "none"},
-    discount: {type: Number, default: 0, min: 0}, // Discount must be non-negative
-    purity: {type: mongoose.Schema.Types.ObjectId, ref: "Purity", required: null}, // Metal purity
-    rate: {type: mongoose.Schema.Types.ObjectId, ref: "Rate", required: null}, // Reference to rates table
-    status: {type: String, enum: ["Show", "Hide"], default: "Show"},
-    price: {type: Number, default: 0},
-    price_is_fixed: {type: Boolean, default: true},
-    reviews: [{type: mongoose.Schema.Types.ObjectId, ref: "Review"}],
-    averageRating: {type: Number, default: 0},
-}, {timestamps: true, toJSON: {virtuals: true}, toObject: {virtuals: true}});
+    about_this_item: { type: String, required: true },
+    additional_info: { type: String, required: null },
+    product_name: { type: String, required: true },
+    category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
+    metal_type: { type: mongoose.Schema.Types.ObjectId, ref: "MetalType", required: true },
+    gender: { type: String, required: true },
+    size: { type: String, required: null },
+    width: { type: Number, required: false },
+    height: { type: Number, required: false },
+    weight: { type: Number, required: true },
+    quantity: { type: Number, required: false },
+    promo_type: { type: mongoose.Schema.Types.ObjectId, ref: "PromoType", required: false },
+    jewellery_type: { type: String, required: null },
+    making_charges_per_gm: { type: Number, required: false },
+    hall_mark_charges: { type: Number, required: false },
+    additional_charges: { type: Number, required: false },
+    making_type: { type: String, enum: ["percentage", "flat"], default: "flat" },
+    design_code: { type: String },
+    product_images: [{ type: String, required: true }],
+    discount_type: { type: String, enum: ["none", "flat", "percentage"], default: "none" },
+    discount: { type: Number, default: 0, min: 0 }, // Discount must be non-negative
+    purity: { type: mongoose.Schema.Types.ObjectId, ref: "Purity", required: null }, // Metal purity
+    rate: { type: mongoose.Schema.Types.ObjectId, ref: "Rate", required: null }, // Reference to rates table
+    status: { type: String, enum: ["Show", "Hide"], default: "Show" },
+    price: { type: Number, default: 0 },
+    price_is_fixed: { type: Boolean, default: true },
+    reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "Review" }],
+    averageRating: { type: Number, default: 0 },
+}, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
 
+// changes
 /**
  * **Method to fetch base rate based on metal type**
  */
@@ -40,8 +41,8 @@ productSchema.methods.getBaseRate = async function () {
     const Rate = mongoose.model("Rate");
 
     // Find the latest rate for this metal type
-    const rateData = await Rate.findOne({metal_type: this.metal_type._id})
-        .sort({createdAt: -1});
+    const rateData = await Rate.findOne({ metal_type: this.metal_type._id })
+        .sort({ createdAt: -1 });
 
     if (!rateData) {
         throw new Error(`No rate found for ${this.metal_type.metal_name}`);
@@ -224,7 +225,7 @@ productSchema.pre("findOneAndUpdate", async function (next) {
 
         if (shouldRecalculate) {
             const finalPrice = await product.getFinalPrice();
-            this.setUpdate({...update, price: finalPrice || 0});
+            this.setUpdate({ ...update, price: finalPrice || 0 });
         }
 
         next();
